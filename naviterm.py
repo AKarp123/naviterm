@@ -1,4 +1,4 @@
-from naviterm.main import main
+from naviterm import main
 
 if __name__ == "__main__":
     main()

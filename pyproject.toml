@@ -5,6 +5,8 @@ description = "A TUI Music Player for Navidrome and other opensubsonic-api compa
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "platformdirs>=4.5.1",
+    "py-sonic>=1.0.3",
     "textual>=0.60.0",
     "textual-dev>=1.8.0",
 ]

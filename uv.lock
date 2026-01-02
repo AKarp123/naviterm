@@ -335,12 +335,16 @@ name = "naviterm"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "platformdirs" },
+    { name = "py-sonic" },
     { name = "textual" },
     { name = "textual-dev" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "platformdirs", specifier = ">=4.5.1" },
+    { name = "py-sonic", specifier = ">=1.0.3" },
     { name = "textual", specifier = ">=0.60.0" },
     { name = "textual-dev", specifier = ">=1.8.0" },
 ]
@@ -392,6 +396,12 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c4/2d/346e946d4951f37eca1e4f55be0f0174c52cd70720f84029b02f296f4a38/propcache-0.4.1-cp314-cp314t-win_arm64.whl", hash = "sha256:ecef2343af4cc68e05131e45024ba34f6095821988a9d0a02aa7c73fcc448aa9", size = 40428, upload-time = "2025-10-08T19:48:35.441Z" },
     { url = "https://files.pythonhosted.org/packages/5b/5a/bc7b4a4ef808fa59a816c17b20c4bef6884daebbdf627ff2a161da67da19/propcache-0.4.1-py3-none-any.whl", hash = "sha256:af2a6052aeb6cf17d3e46ee169099044fd8224cbaf75c76a2ef596e8163e2237", size = 13305, upload-time = "2025-10-08T19:49:00.792Z" },
 ]
+
+[[package]]
+name = "py-sonic"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/db/253f21d304ada777b953236f6b151a7ef6b435731f0f5f979198c5e57024/py-sonic-1.0.3.tar.gz", hash = "sha256:29c972de94c12fd64c0dc09f2a0235a4ef08cabd79fedbfc3d5a22e5651450a1", size = 36127, upload-time = "2025-04-14T19:41:20.811Z" }
 
 [[package]]
 name = "pygments"
