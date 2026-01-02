@@ -1,5 +1,6 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Button, Static
+from textual.containers import Container
+from textual.widgets import Header, Footer, Input, Static
 
 
 class NavitermApp(App):
@@ -10,31 +11,50 @@ class NavitermApp(App):
         align: center middle;
     }
     
-    #greeting {
-        width: 50;
+    #form-container {
+        width: 66%;
+        max-width: 66%;
+        height: auto;
+        align: center middle;
+    }
+    
+    #title {
+        width: 100%;
         height: 3;
-        border: solid $primary;
         content-align: center middle;
+        text-style: bold;
+        margin-bottom: 2;
+    }
+    
+    Input {
+        width: 100%;
+        margin-bottom: 1;
+    }
+    
+    .label {
+        width: 100%;
+        margin-bottom: 1;
     }
     """
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the app."""
         yield Header()
-        yield Static("Welcome to Naviterm!", id="greeting")
-        yield Button("Click me!", id="click-button", variant="primary")
+        with Container(id="form-container"):
+            yield Static("Naviterm", id="title")
+            yield Static("", classes="label")
+            yield Static("Server URL:", classes="label")
+            yield Input(placeholder="Enter server URL", id="server-url")
+            yield Static("Username:", classes="label")
+            yield Input(placeholder="Enter username", id="username")
+            yield Static("Password:", classes="label")
+            yield Input(placeholder="Enter password", id="password", password=True)
         yield Footer()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Handle button press events."""
-        if event.button.id == "click-button":
-            self.query_one("#greeting", Static).update("Button was clicked!")
 
 
-def main():
-    app = NavitermApp()
-    app.run()
 
 
 if __name__ == "__main__":
-    main()
+    app = NavitermApp()
+    app.run()
