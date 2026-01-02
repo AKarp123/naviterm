@@ -15,5 +15,11 @@ uv sync
 Run the application:
 
 ```bash
-uv run python main.py
+uv run python naviterm.py
+```
+
+Or using the entry point (after installation):
+
+```bash
+uv run naviterm
 ```

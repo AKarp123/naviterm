@@ -52,9 +52,11 @@ class NavitermApp(App):
         yield Footer()
 
 
-
+def main():
+    app = NavitermApp()
+    app.run()
 
 
 if __name__ == "__main__":
-    app = NavitermApp()
-    app.run()
+    main()
+
