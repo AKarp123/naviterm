@@ -1,5 +1,6 @@
-from libopensonic import Connection
+from libopensonic import Connection, errors
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class subsonic_conection:
             logger.debug(f"Ping result: {res}")
             return res
         except Exception as e:
+
             logger.error(f"Error pinging server: {e}")
             return False
         
