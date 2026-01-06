@@ -95,12 +95,14 @@ class LoginScreen(Screen):
         self.server_url = self.query_one("#server-url", Input).value
         save_config(self.username, self.password, self.server_url)
         self.connection = subsonic_conection(self.server_url, self.username, self.password)
+        
         res = self.connection.ping()
         if res:
             logger.debug("Server pinged successfully")
+            self.app.connection = self.connection
             self.post_message(self.PingResult(True))
+            self.dismiss()
         else:
             logger.error("Server ping failed")
             self.post_message(self.PingResult(False))
-        self.app.exit()
 

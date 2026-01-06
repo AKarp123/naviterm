@@ -1,6 +1,8 @@
 from libopensonic import Connection, errors
 import logging
 
+from libopensonic.media.media_types import Album
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,15 @@ class subsonic_conection:
         except Exception as e:
 
             logger.error(f"Error pinging server: {e}")
+            return False
+        
+    def get_all_albums(self) -> list[Album]:
+        try:
+            res = self.connection.get_album_list(ltype="newest", size=50)
+            logger.debug(f"All albums: {res}")
+            return res
+        except Exception as e:
+            logger.error(f"Error getting all albums: {e}")
             return False
         
         
