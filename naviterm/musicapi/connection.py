@@ -20,9 +20,9 @@ class subsonic_conection:
             logger.error(f"Error pinging server: {e}")
             return False
         
-    def get_all_albums(self) -> list[Album]:
+    def get_all_albums(self, offset: int = 0) -> list[Album]:
         try:
-            res = self.connection.get_album_list(ltype="newest", size=50)
+            res = self.connection.get_album_list(ltype="newest", size=50, offset=offset)
             logger.debug(f"All albums: {res}")
             return res
         except Exception as e:
