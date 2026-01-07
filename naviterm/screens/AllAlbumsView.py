@@ -25,7 +25,7 @@ class AllAlbumsView(Screen):
         albums_result = self.connection.get_all_albums()
         self.albums : list[Album] = albums_result if albums_result else []
         self.albums_offset = 0
-        logger.debug(f"Albums: {self.albums}")
+
 
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view screen."""
@@ -36,17 +36,21 @@ class AllAlbumsView(Screen):
         table.add_column("Artist", width=27)
         table.add_column("Album", width=40)
         table.add_column("Year", width=8)
+        table.add_column("Added", width=12)
         
-        logger.debug(f"Albums: {self.albums}")
         # Populate table with album data
         for album in self.albums:
             artist = album.artist or "Unknown"
             album_name = album.name or "Unknown"
             year = str(album.year) if album.year else "Unknown"
-            table.add_row(artist, album_name, year)
+            created = album.created.split("T")[0] if album.created else "Unknown"
+            table.add_row(artist, album_name, year, created)
         
         yield table
         yield Footer()
+        
+    def on_mount(self) -> None:
+        self.title = "🎵 All Albums"
         
     def on_key(self, event: Key) -> None:
         """Handle key events."""
@@ -63,7 +67,8 @@ class AllAlbumsView(Screen):
                         artist = album.artist or "Unknown"
                         album_name = album.name or "Unknown"
                         year = str(album.year) if album.year else "Unknown"
-                        table.add_row(artist, album_name, year)
+                        created = album.created.split("T")[0] if album.created else "Unknown"
+                        table.add_row(artist, album_name, year, created)
                 self.compose()
             event.stop()
                 

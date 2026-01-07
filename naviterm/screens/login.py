@@ -67,7 +67,6 @@ class LoginScreen(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets for the login screen."""
         logger.debug("Composing login screen")
-        yield Header()
         with Vertical():
             with Container(id="form-container"):
                 yield Static("Naviterm Setup", id="title")

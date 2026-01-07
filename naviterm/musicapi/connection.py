@@ -23,7 +23,6 @@ class subsonic_conection:
     def get_all_albums(self, offset: int = 0) -> list[Album]:
         try:
             res = self.connection.get_album_list(ltype="newest", size=50, offset=offset)
-            logger.debug(f"All albums: {res}")
             return res
         except Exception as e:
             logger.error(f"Error getting all albums: {e}")
