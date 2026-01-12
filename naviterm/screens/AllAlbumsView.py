@@ -1,21 +1,16 @@
 from textual.events import Key
-from textual.screen import Screen
-from textual.widgets import Header, Footer, DataTable
+from textual.widgets import DataTable
 from textual.app import ComposeResult
-
+from textual.widget import Widget
 import logging
 
 from naviterm.musicapi.connection import SubsonicConnection
 from libopensonic.media.media_types import Album
-from naviterm.screens.AlbumView import AlbumView
+from naviterm.screens.Layout import Layout
 logger = logging.getLogger(__name__)
 
-class AllAlbumsView(Screen):
-    """Screen for viewing all albums."""
-    
-    BINDINGS = [
-        ("enter", "view_album", "View album"),
-    ]
+class AllAlbumsViewWidget(Widget):
+    """Widget for viewing all albums."""
     
     CSS = """
     #albums-table {
@@ -28,12 +23,14 @@ class AllAlbumsView(Screen):
     
     def __init__(self):
         super().__init__()
-        if not hasattr(self.app, 'connection') or self.app.connection is None:
-            raise RuntimeError("Connection not available")
-        self.connection: SubsonicConnection = self.app.connection
         self.albums_offset = 0
+        self.connection: SubsonicConnection = None
         
     def on_mount(self) -> None:
+        if not hasattr(self.app, 'connection') or self.app.connection is None:
+            raise RuntimeError("Connection not available")
+        self.connection = self.app.connection
+        
         table = self.query_one("#albums-table", DataTable)
         table.cursor_type = "row"
         # Set column widths: Artist gets more space, Album is smaller, Year is minimal
@@ -45,9 +42,6 @@ class AllAlbumsView(Screen):
         # Add albums to the table
         albums = self.get_albums(0)
         self.add_albums_to_table(table, albums)
-        
-
-
 
     def get_albums(self, offset: int = 0) -> list[Album]:
         """Get all albums from the server."""
@@ -56,7 +50,6 @@ class AllAlbumsView(Screen):
             logger.error("Failed to get albums")
             return []
         return albums
-    
     
     def add_albums_to_table(self, table: DataTable, albums: list[Album]) -> None:
         """Add albums to the table."""
@@ -67,8 +60,7 @@ class AllAlbumsView(Screen):
             created = album.created.split("T")[0] if album.created else "Unknown"
             table.add_row(artist, album_name, year, created, key=album.id)
 
-    
-    def action_view_album(self) -> None:
+    def view_album(self) -> None:
         """View an album."""
         table = self.query_one("#albums-table", DataTable)
         if table.cursor_row is None:
@@ -81,15 +73,13 @@ class AllAlbumsView(Screen):
             return
         
         logger.debug(f"Viewing album with ID: {album_id}")
+        from naviterm.screens.AlbumView import AlbumView
         self.app.push_screen(AlbumView(album_id))
 
     def compose(self) -> ComposeResult:
-        """Create child widgets for the album view screen."""
+        """Create child widgets for the album view widget."""
         yield DataTable(id="albums-table")
 
-        yield Footer()
-
-    
     def load_more_albums(self) -> None:
         """Load more albums when reaching the end of the table."""
         table = self.query_one("#albums-table", DataTable)
@@ -109,4 +99,22 @@ class AllAlbumsView(Screen):
                 # Only stop event if we actually loaded more albums
                 if table.cursor_row < table.row_count - 1:
                     event.stop()
-        # Don't handle enter here - let the binding handle it
+        elif event.key == "enter":
+            self.view_album()
+            event.stop()
+
+
+class AllAlbumsView(Layout):
+    """Screen wrapper for AllAlbumsView widget with Layout."""
+    
+    BINDINGS = [
+        ("enter", "view_album", "View album"),
+    ]
+    
+    def __init__(self):
+        self.albums_widget = AllAlbumsViewWidget()
+        super().__init__(content_widget=self.albums_widget)
+    
+    def action_view_album(self) -> None:
+        """View an album."""
+        self.albums_widget.view_album()

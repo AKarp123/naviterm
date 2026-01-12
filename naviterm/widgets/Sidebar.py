@@ -1,5 +1,6 @@
 from textual.app import ComposeResult
-from textual.widgets import Widget, TableView
+from textual.widget import Widget
+from textual.widgets import DataTable
 
 
 OPTIONS = [
@@ -23,15 +24,16 @@ class Sidebar(Widget):
         width: 20%;
         height: 100%;
         border: solid round white;
+        scrollbar-visibility: hidden;
     }
     """
 
     def on_mount(self) -> None:
-        table = self.query_one("#sidebar-table", TableView)
+        table = self.query_one("#sidebar-table", DataTable)
         table.cursor_type = "row"
-        table.add_column("Options", width=20)
+        table.add_column("Options", width=21)
         for option in OPTIONS:
             table.add_row(option, key=option)
 
     def compose(self) -> ComposeResult:
-        yield TableView(id="sidebar-table")
+        yield DataTable(id="sidebar-table")
