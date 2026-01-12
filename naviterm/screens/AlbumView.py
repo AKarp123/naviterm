@@ -14,6 +14,7 @@ class AlbumViewWidget(Widget):
         width: 100%;
         height: 100%;
         padding: 1;
+        scrollbar-visibility: hidden;
     }
     
     #album-header {

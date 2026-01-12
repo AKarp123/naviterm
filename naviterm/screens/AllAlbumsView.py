@@ -18,6 +18,7 @@ class AllAlbumsViewWidget(Widget):
         height: 100%;
         border: solid round white;
         scrollbar-visibility: hidden;
+        
     }
     """
     

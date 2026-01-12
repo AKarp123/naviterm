@@ -13,6 +13,7 @@ class Layout(Screen):
     CSS = """
     Layout {
         layout: horizontal;
+        margin: 1;
     }
     
     #sidebar-container {
@@ -20,13 +21,17 @@ class Layout(Screen):
         min-width: 15;
         max-width: 40;
         height: 100%;
-        border-right: solid $primary;
+        border: solid round white;
+        margin-right: 1;
+        scrollbar-visibility: hidden;
     }
     
     #content-container {
         width: 1fr;
         height: 100%;
         layout: vertical;
+        border: solid round white;
+        scrollbar-visibility: hidden;
     }
     
     #content-container > * {
@@ -39,6 +44,10 @@ class Layout(Screen):
     
     #content-container > Footer {
         height: auto;
+    }
+    
+    DataTable {
+        scrollbar-visibility: hidden;
     }
     """
     

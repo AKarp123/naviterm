@@ -26,6 +26,10 @@ class Sidebar(Widget):
         border: solid round white;
         scrollbar-visibility: hidden;
     }
+    
+    #sidebar-table {
+        scrollbar-visibility: hidden;
+    }
     """
 
     def on_mount(self) -> None:
