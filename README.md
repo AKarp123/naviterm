@@ -2,7 +2,8 @@
 
 A TUI Music Player for Navidrome and other opensubsonic-api compatible servers.
 
-## NOTE: This is a work in progress and is not yet functional.
+## NOTE: 
+This is a work in progress and is not yet functional.
 
 ## Installation
 
