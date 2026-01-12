@@ -7,7 +7,7 @@ from naviterm.config import load_config
 from .screens import LoginScreen, AllAlbumsView, AlbumView
 import logging
 from typing import Optional
-from .musicapi.connection import SubsonicConnection
+from libopensonic.connection import Connection
 
 logging.basicConfig(level=logging.DEBUG, handlers=[TextualHandler()])
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class NavitermApp(App):
     
     def __init__(self):
         super().__init__()
-        self.connection : Optional[SubsonicConnection] = None
+        self.connection : Optional[Connection] = None
 
     def on_mount(self) -> None:
         """Set up the initial screen when the app starts."""
@@ -30,24 +30,14 @@ class NavitermApp(App):
         logger.debug("Starting NavitermApp")
         config = load_config()
         if config.get("username") and config.get("password") and config.get("server_url"):
-            self.connection = SubsonicConnection(config.get("server_url"), config.get("username"), config.get("password"))
-            ping_result = self.connection.ping()
-            if ping_result:
+            self.connection = Connection(base_url=config.get("server_url"), username=config.get("username"), password=config.get("password"), app_name="Naviterm", port=443)
+            try:
+                self.connection.ping()
                 self.push_screen(AllAlbumsView())
-            else:
+            except Exception as e:
+                logger.error(f"Error pinging server: {e}")
                 self.push_screen(LoginScreen())
-        else:
-            self.push_screen(LoginScreen())
-
-    def on_login_screen_ping_result(self, event: LoginScreen.PingResult) -> None:
-        """Handle ping result from login screen."""
-        logger.debug(f"Ping result: {event.result}")
-        if event.result:
-            logger.debug("Pushing AllAlbumsView")
-            self.pop_screen()
-            self.push_screen(AllAlbumsView())
-        else:
-            logger.error("Login failed, staying on login screen")
+            
             
 
 

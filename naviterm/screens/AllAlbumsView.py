@@ -3,8 +3,8 @@ from textual.widgets import DataTable
 from textual.app import ComposeResult
 from textual.widget import Widget
 import logging
-
-from naviterm.musicapi.connection import SubsonicConnection
+from naviterm.screens.AlbumView import AlbumView
+from libopensonic.connection import Connection
 from libopensonic.media.media_types import Album
 from naviterm.screens.Layout import Layout
 logger = logging.getLogger(__name__)
@@ -25,13 +25,9 @@ class AllAlbumsViewWidget(Widget):
     def __init__(self):
         super().__init__()
         self.albums_offset = 0
-        self.connection: SubsonicConnection = None
+        self.connection: Connection = self.app.connection
         
     def on_mount(self) -> None:
-        if not hasattr(self.app, 'connection') or self.app.connection is None:
-            raise RuntimeError("Connection not available")
-        self.connection = self.app.connection
-        
         table = self.query_one("#albums-table", DataTable)
         table.cursor_type = "row"
         # Set column widths: Artist gets more space, Album is smaller, Year is minimal
@@ -41,12 +37,13 @@ class AllAlbumsViewWidget(Widget):
         table.add_column("Added", width=12)
         
         # Add albums to the table
-        albums = self.get_albums(0)
+        
+        albums = self.get_albums(count=self.app.size.height, offset=0)
         self.add_albums_to_table(table, albums)
 
-    def get_albums(self, offset: int = 0) -> list[Album]:
+    def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:
         """Get all albums from the server."""
-        albums = self.connection.get_all_albums(offset)
+        albums = self.connection.get_album_list(ltype="newest", size=count, offset=offset)
         if albums is False or albums is None:
             logger.error("Failed to get albums")
             return []
@@ -60,6 +57,7 @@ class AllAlbumsViewWidget(Widget):
             year = str(album.year) if album.year else "Unknown"
             created = album.created.split("T")[0] if album.created else "Unknown"
             table.add_row(artist, album_name, year, created, key=album.id)
+        self.albums_offset += len(albums)
 
     def view_album(self) -> None:
         """View an album."""
@@ -74,7 +72,7 @@ class AllAlbumsViewWidget(Widget):
             return
         
         logger.debug(f"Viewing album with ID: {album_id}")
-        from naviterm.screens.AlbumView import AlbumView
+
         self.app.push_screen(AlbumView(album_id))
 
     def compose(self) -> ComposeResult:
@@ -85,7 +83,7 @@ class AllAlbumsViewWidget(Widget):
         """Load more albums when reaching the end of the table."""
         table = self.query_one("#albums-table", DataTable)
         self.albums_offset += 50
-        new_albums = self.get_albums(self.albums_offset)
+        new_albums = self.get_albums(offset=self.albums_offset)
         if new_albums:
             self.add_albums_to_table(table, new_albums)
             logger.debug(f"Loaded {len(new_albums)} more albums")

@@ -6,7 +6,7 @@ from textual.widgets import Header, Footer, Input, Static, Button
 from textual.message import Message
 from textual.app import ComposeResult
 from ..config import load_config, save_config
-from ..musicapi.connection import SubsonicConnection
+from libopensonic.connection import Connection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -93,15 +93,14 @@ class LoginScreen(Screen):
         self.password = self.query_one("#password", Input).value
         self.server_url = self.query_one("#server-url", Input).value
         save_config(self.username, self.password, self.server_url)
-        self.connection = SubsonicConnection(self.server_url, self.username, self.password)
+        self.connection = Connection(base_url=self.server_url, username=self.username, password=self.password, app_name="Naviterm", port=443)
         
-        res = self.connection.ping()
-        if res:
-            logger.debug("Server pinged successfully")
-            self.app.connection = self.connection
-            self.post_message(self.PingResult(True))
-            self.dismiss()
-        else:
-            logger.error("Server ping failed")
+        try:
+            self.connection.ping()
+        except Exception as e:
+            logger.error(f"Error pinging server: {e}")
             self.post_message(self.PingResult(False))
+            return
+        self.app.connection = self.connection
+        self.dismiss()
 
