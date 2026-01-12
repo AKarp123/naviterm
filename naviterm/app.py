@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 class NavitermApp(App):
     """A basic Textualize TUI application."""
     
-    BINDINGS = [
-        ("b", "go_back()", "Go back")
-    ]
+  
     
 
     
@@ -51,12 +49,7 @@ class NavitermApp(App):
         else:
             logger.error("Login failed, staying on login screen")
             
-    def action_go_back(self) -> None:
-        """Go back to the previous screen."""
-        if len(self.screen_stack) > 2: # 2 because either login or album view is the last in the stack
-            print(len(self.screen_stack))
-            print(self.screen_stack)
-            self.pop_screen()
+
 
     
 
