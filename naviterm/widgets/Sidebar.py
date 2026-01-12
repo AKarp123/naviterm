@@ -4,7 +4,7 @@ from textual.widgets import DataTable
 
 
 OPTIONS = [
-    "Recently Added Albums",
+    "Recently Added",
     "Songs",
     "Playlists",
     "Artists",
