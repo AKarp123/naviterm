@@ -6,7 +6,7 @@ from textual.widgets import Header, Footer, Input, Static, Button
 from textual.message import Message
 from textual.app import ComposeResult
 from ..config import load_config, save_config
-from ..musicapi.connection import subsonic_conection
+from ..musicapi.connection import SubsonicConnection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class LoginScreen(Screen):
         self.password = self.query_one("#password", Input).value
         self.server_url = self.query_one("#server-url", Input).value
         save_config(self.username, self.password, self.server_url)
-        self.connection = subsonic_conection(self.server_url, self.username, self.password)
+        self.connection = SubsonicConnection(self.server_url, self.username, self.password)
         
         res = self.connection.ping()
         if res:

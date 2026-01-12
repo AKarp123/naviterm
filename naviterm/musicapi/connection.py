@@ -6,7 +6,7 @@ from libopensonic.media.media_types import Album
 
 logger = logging.getLogger(__name__)
 
-class subsonic_conection:
+class SubsonicConnection:
     def __init__(self, server_url: str, username: str, password: str):
         self.connection = Connection(base_url=server_url, username=username, password=password, app_name="Naviterm", port=443)
         
@@ -28,5 +28,12 @@ class subsonic_conection:
             logger.error(f"Error getting all albums: {e}")
             return False
         
+    def get_album(self, album_id: str) -> Album:
+        try:
+            res = self.connection.get_album(album_id)
+            return res
+        except Exception as e:
+            logger.error(f"Error getting album: {e}")
+            return False
         
 
