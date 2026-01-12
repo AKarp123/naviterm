@@ -4,11 +4,11 @@ from textual.app import App
 from textual.logging import TextualHandler
 
 from naviterm.config import load_config
-from .screens import LoginScreen
+from .screens import LoginScreen, AllAlbumsView, AlbumView
 import logging
 from typing import Optional
 from .musicapi.connection import SubsonicConnection
-from .screens.AllAlbumsView import AllAlbumsView
+
 logging.basicConfig(level=logging.DEBUG, handlers=[TextualHandler()])
 logger = logging.getLogger(__name__)
 
