@@ -1,3 +1,4 @@
+import asyncio
 from textual.events import Key
 from textual.widgets import DataTable
 from textual.app import ComposeResult
@@ -26,6 +27,7 @@ class AllAlbumsViewWidget(Widget):
         super().__init__()
         self.albums_offset = 0
         self.connection: Connection = self.app.connection
+        self.loading_more_albums = False
         
     def on_mount(self) -> None:
         table = self.query_one("#albums-table", DataTable)
@@ -43,22 +45,26 @@ class AllAlbumsViewWidget(Widget):
 
     def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:
         """Get all albums from the server."""
+        print(f"Getting albums with count: {count} and offset: {offset}")
         albums = self.connection.get_album_list(ltype="newest", size=count, offset=offset)
         if albums is False or albums is None:
             logger.error("Failed to get albums")
             return []
+        
         return albums
     
     def add_albums_to_table(self, table: DataTable, albums: list[Album]) -> None:
         """Add albums to the table."""
         for album in albums:
-            artist = album.artist or "Unknown"
-            album_name = album.name or "Unknown"
+            artist = album.artist.replace("\u200b", "") or "Unknown"
+            album_name = album.name.replace("\u200b", "") or "Unknown"
             year = str(album.year) if album.year else "Unknown"
             created = album.created.split("T")[0] if album.created else "Unknown"
+            
             table.add_row(artist, album_name, year, created, key=album.id)
+        
         self.albums_offset += len(albums)
-
+        print(f"Albums offset: {self.albums_offset}")
     def view_album(self) -> None:
         """View an album."""
         table = self.query_one("#albums-table", DataTable)
@@ -79,25 +85,24 @@ class AllAlbumsViewWidget(Widget):
         """Create child widgets for the album view widget."""
         yield DataTable(id="albums-table")
 
-    def load_more_albums(self) -> None:
+    async def load_more_albums(self) -> None:
         """Load more albums when reaching the end of the table."""
+        self.loading_more_albums = True
         table = self.query_one("#albums-table", DataTable)
-        self.albums_offset += 50
-        new_albums = self.get_albums(offset=self.albums_offset)
+        print(f"Loading more albums with offset: {self.albums_offset}")
+        new_albums = await asyncio.to_thread(self.get_albums, offset=self.albums_offset, )
         if new_albums:
             self.add_albums_to_table(table, new_albums)
             logger.debug(f"Loaded {len(new_albums)} more albums")
-        
+        self.loading_more_albums = False
     def on_key(self, event: Key) -> None:
         """Handle key events."""
         if event.key == "down":
             table = self.query_one("#albums-table", DataTable)
-            # Check if we're at the last row
-            if table.cursor_row == table.row_count - 1:
-                self.load_more_albums()
-                # Only stop event if we actually loaded more albums
-                if table.cursor_row < table.row_count - 1:
-                    event.stop()
+            # Check if we're close to the bottom of the table
+            if table.cursor_row >= table.row_count - 10 and not self.loading_more_albums:
+                self.run_worker(self.load_more_albums)
+                event.stop()
         elif event.key == "enter":
             self.view_album()
             event.stop()
