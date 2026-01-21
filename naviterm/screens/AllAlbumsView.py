@@ -4,13 +4,11 @@ from textual.widgets import DataTable
 from textual.app import ComposeResult
 from textual.widget import Widget
 import logging
-from naviterm.screens.AlbumView import AlbumView
 from libopensonic.connection import Connection
 from libopensonic.media.media_types import Album
-from naviterm.screens.Layout import Layout
 logger = logging.getLogger(__name__)
 
-class AllAlbumsViewWidget(Widget):
+class AllAlbumsView(Widget):
     """Widget for viewing all albums."""
     
     CSS = """
@@ -71,19 +69,17 @@ class AllAlbumsViewWidget(Widget):
         if table.cursor_row is None:
             logger.warning("No row selected")
             return
-        
-        album_id = table.get_row_key(table.cursor_row)
-        if album_id is None:
+
+        # Textual's DataTable doesn't expose get_row_key() in older versions.
+        # We can map the visible row index to its RowKey via ordered_rows.
+        try:
+            album_id = str(table.ordered_rows[table.cursor_row].key)
+        except Exception:
             logger.error("Could not get album ID for selected row")
             return
-        
-        logger.debug(f"Viewing album with ID: {album_id}")
 
-        self.app.push_screen(AlbumView(album_id))
+        logger.debug("Viewing album with ID: %s", album_id)
 
-    def compose(self) -> ComposeResult:
-        """Create child widgets for the album view widget."""
-        yield DataTable(id="albums-table")
 
     async def load_more_albums(self) -> None:
         """Load more albums when reaching the end of the table."""
@@ -95,6 +91,7 @@ class AllAlbumsViewWidget(Widget):
             self.add_albums_to_table(table, new_albums)
             logger.debug(f"Loaded {len(new_albums)} more albums")
         self.loading_more_albums = False
+    
     def on_key(self, event: Key) -> None:
         """Handle key events."""
         if event.key == "down":
@@ -106,19 +103,9 @@ class AllAlbumsViewWidget(Widget):
         elif event.key == "enter":
             self.view_album()
             event.stop()
+            
+    def compose(self) -> ComposeResult:
+        """Create child widgets for the album view widget."""
+        yield DataTable(id="albums-table")
 
 
-class AllAlbumsView(Layout):
-    """Screen wrapper for AllAlbumsView widget with Layout."""
-    
-    BINDINGS = [
-        ("enter", "view_album", "View album"),
-    ]
-    
-    def __init__(self):
-        self.albums_widget = AllAlbumsViewWidget()
-        super().__init__(content_widget=self.albums_widget)
-    
-    def action_view_album(self) -> None:
-        """View an album."""
-        self.albums_widget.view_album()

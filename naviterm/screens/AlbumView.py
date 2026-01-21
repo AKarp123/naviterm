@@ -2,11 +2,11 @@ from textual.widgets import Static
 from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from naviterm.screens.Layout import Layout
+
 from libopensonic.connection import Connection
 
 
-class AlbumViewWidget(Widget):
+class AlbumView(Widget):
     """Widget for viewing an album."""
     
     CSS = """
@@ -39,9 +39,4 @@ class AlbumViewWidget(Widget):
             # TODO: Add album tracks/songs here
 
 
-class AlbumView(Layout):
-    """Screen wrapper for AlbumView widget with Layout."""
-    
-    def __init__(self, album_id: str):
-        self.album_widget = AlbumViewWidget(album_id)
-        super().__init__(content_widget=self.album_widget)
+

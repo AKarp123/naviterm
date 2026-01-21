@@ -4,7 +4,7 @@ from textual.app import App
 from textual.logging import TextualHandler
 
 from naviterm.config import load_config
-from .screens import LoginScreen, AllAlbumsView, AlbumView
+from .screens import LoginScreen, Layout
 import logging
 from typing import Optional
 from libopensonic.connection import Connection
@@ -33,7 +33,7 @@ class NavitermApp(App):
             self.connection = Connection(base_url=config.get("server_url"), username=config.get("username"), password=config.get("password"), app_name="Naviterm", port=443)
             try:
                 self.connection.ping()
-                self.push_screen(AllAlbumsView())
+                self.push_screen(Layout())
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
                 self.push_screen(LoginScreen())

@@ -1,12 +1,14 @@
 """Layout screen that contains Sidebar and content area."""
 
+import logging
 from textual.screen import Screen
 from textual.containers import Horizontal, Container
 from textual.app import ComposeResult
 from textual.widgets import Footer
 from naviterm.widgets.Sidebar import Sidebar
 from textual.widget import Widget
-
+from naviterm.screens.AllAlbumsView import AllAlbumsView
+from naviterm.screens.AlbumView import AlbumView
 
 class Layout(Screen):
     """A layout screen with Sidebar and content area."""
@@ -14,6 +16,9 @@ class Layout(Screen):
     BINDINGS = [
         ("b", "go_back()", "Go back")
     ]
+    
+    logger = logging.getLogger(__name__)
+    
     
     CSS = """
     Layout {
@@ -55,6 +60,10 @@ class Layout(Screen):
         scrollbar-visibility: hidden;
     }
     """
+    CONTENT_WIDGETS = {
+        "AllAlbumsView": AllAlbumsView,
+        "AlbumView": AlbumView,
+    }
     
     def __init__(self, content_widget=None):
         """Initialize the layout with optional content widget.
@@ -64,7 +73,7 @@ class Layout(Screen):
         """
         super().__init__()
         self.history: list[Widget] = []
-        self.content_widget = content_widget
+        self.content_widget = "AllAlbumsView"
     
     def compose(self) -> ComposeResult:
         """Create child widgets for the layout screen."""
@@ -73,12 +82,10 @@ class Layout(Screen):
                 yield Sidebar()
             
             with Container(id="content-container"):
-                if self.content_widget:
-                    self.content_widget.add_class("content-widget")
-                    yield self.content_widget
+                yield self.CONTENT_WIDGETS[self.content_widget]()
             yield Footer(id="layout-footer")
     
-    def set_content(self, widget: Widget) -> None:
+    def set_content(self, widget_name: str) -> None:
         """Set the content widget in the content area.
         
         Args:
@@ -90,8 +97,9 @@ class Layout(Screen):
         self.history.append(self.content_widget)
         content_container.remove_children()
         # Add class to widget and mount before footer
-        widget.add_class("content-widget")
-        content_container.mount(widget, before=footer)
+
+        content_container.mount(self.CONTENT_WIDGETS[widget_name](), before=footer)
+    
     
     def on_mount(self) -> None:
         """Called when the screen is mounted."""
@@ -102,3 +110,9 @@ class Layout(Screen):
         if len(self.history) > 0:
             self.content_widget = self.history.pop()
             self.set_content(self.content_widget)
+
+    def on_sidebar_option_selected(self, message: Sidebar.SidebarOptionSelected) -> None:
+        """Handle sidebar navigation to switch screens/content."""
+        option = message.option
+        self.content_widget = option
+        self.set_content(self.content_widget)
