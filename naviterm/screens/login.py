@@ -6,7 +6,7 @@ from textual.widgets import Header, Footer, Input, Static, Button
 from textual.message import Message
 from textual.app import ComposeResult
 from ..config import load_config, save_config
-from libopensonic.connection import Connection
+from libopensonic.async_connection import AsyncConnection
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,17 +86,17 @@ class LoginScreen(Screen):
             
     
 
-    def login(self):
+    async def login(self) -> None:
         """Handle login: save credentials and exit."""
         logger.debug("Login button pressed")
         self.username = self.query_one("#username", Input).value
         self.password = self.query_one("#password", Input).value
         self.server_url = self.query_one("#server-url", Input).value
         save_config(self.username, self.password, self.server_url)
-        self.connection = Connection(base_url=self.server_url, username=self.username, password=self.password, app_name="Naviterm", port=443)
+        self.connection = AsyncConnection(base_url=self.server_url, username=self.username, password=self.password, app_name="Naviterm", port=443)
         
         try:
-            self.connection.ping()
+            await self.connection.ping()
         except Exception as e:
             logger.error(f"Error pinging server: {e}")
             self.post_message(self.PingResult(False))

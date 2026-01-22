@@ -70,6 +70,7 @@ class Layout(Screen):
     }
     
     hide_sidebar = reactive(False)
+    content_widget = reactive("AllAlbumsView")
     
     def __init__(self, content_widget=None):
         """Initialize the layout with optional content widget.
@@ -79,25 +80,18 @@ class Layout(Screen):
         """
         super().__init__()
         self.history: list[str] = []
-        self.content_widget : str = "AllAlbumsView"
     
-    def compose(self) -> ComposeResult:
-        """Create child widgets for the layout screen."""
-        with Horizontal():
-            with Container(id="sidebar-container"):
-                yield Sidebar()
-            
-            with Container(id="content-container"):
-                yield self.CONTENT_WIDGETS[self.content_widget]()
-            yield Footer(id="layout-footer")
     
-    def set_content(self, widget_name: str) -> None:
+    def watch_content_widget(self, widget_name: str) -> None:
         """Set the content widget in the content area.
         
         Args:
-            widget: Widget to display in the content area.
+            widget_name: Widget name to display in the content area.
         """
-        content_container = self.query_one("#content-container", Container)
+        try:
+            content_container = self.query_one("#content-container", Container)
+        except Exception as e:
+            return
         footer = self.query_one("#layout-footer", Footer)
         # Remove existing content (except footer)
         self.history.append(widget_name)
@@ -115,7 +109,6 @@ class Layout(Screen):
         """Go back to the previous screen."""
         if len(self.history) > 0:
             self.content_widget = self.history.pop()
-            self.set_content(self.content_widget)
 
     def on_sidebar_option_selected(self, message: Sidebar.SidebarOptionSelected) -> None:
         """Handle sidebar navigation to switch screens/content."""
@@ -124,7 +117,10 @@ class Layout(Screen):
         self.set_content(self.content_widget)
         
     def watch_hide_sidebar(self, value: bool) -> None:
-        sidebar_container = self.query_one("#sidebar-container", Container)
+        try: # Skip before the screen is mounted
+            sidebar_container = self.query_one("#sidebar-container", Container)
+        except Exception:
+            return
 
         if value:
             sidebar_container.add_class("hidden")
@@ -132,3 +128,14 @@ class Layout(Screen):
             sidebar_container.remove_class("hidden")
     def action_toggle_sidebar(self) -> None:
         self.hide_sidebar = not self.hide_sidebar
+        
+        
+    def compose(self) -> ComposeResult:
+        """Create child widgets for the layout screen."""
+        with Horizontal():
+            with Container(id="sidebar-container"):
+                yield Sidebar()
+            
+            with Container(id="content-container"):
+                yield self.CONTENT_WIDGETS[self.content_widget]()
+            yield Footer(id="layout-footer")

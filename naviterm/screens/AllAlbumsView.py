@@ -1,10 +1,9 @@
-import asyncio
 from textual.events import Key
 from textual.widgets import DataTable
 from textual.app import ComposeResult
 from textual.widget import Widget
 import logging
-from libopensonic.connection import Connection
+from libopensonic.async_connection import AsyncConnection
 from libopensonic.media.media_types import Album
 logger = logging.getLogger(__name__)
 
@@ -24,10 +23,10 @@ class AllAlbumsView(Widget):
     def __init__(self):
         super().__init__()
         self.albums_offset = 0
-        self.connection: Connection = self.app.connection
+        self.connection: AsyncConnection = self.app.connection
         self.loading_more_albums = False
         
-    def on_mount(self) -> None:
+    async def on_mount(self) -> None:
         table = self.query_one("#albums-table", DataTable)
         table.cursor_type = "row"
         # Set column widths: Artist gets more space, Album is smaller, Year is minimal
@@ -38,13 +37,13 @@ class AllAlbumsView(Widget):
         
         # Add albums to the table
         
-        albums = self.get_albums(count=self.app.size.height, offset=0)
+        albums = await self.get_albums(count=self.app.size.height, offset=0)
         self.add_albums_to_table(table, albums)
 
-    def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:
+    async def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:
         """Get all albums from the server."""
         print(f"Getting albums with count: {count} and offset: {offset}")
-        albums = self.connection.get_album_list(ltype="newest", size=count, offset=offset)
+        albums = await self.connection.get_album_list(ltype="newest", size=count, offset=offset)
         if albums is False or albums is None:
             logger.error("Failed to get albums")
             return []
@@ -73,7 +72,7 @@ class AllAlbumsView(Widget):
         # Textual's DataTable doesn't expose get_row_key() in older versions.
         # We can map the visible row index to its RowKey via ordered_rows.
         try:
-            album_id = str(table.ordered_rows[table.cursor_row].key)
+            album_id = table.ordered_rows[table.cursor_row].key.value
         except Exception:
             logger.error("Could not get album ID for selected row")
             return
@@ -86,7 +85,7 @@ class AllAlbumsView(Widget):
         self.loading_more_albums = True
         table = self.query_one("#albums-table", DataTable)
         print(f"Loading more albums with offset: {self.albums_offset}")
-        new_albums = await asyncio.to_thread(self.get_albums, offset=self.albums_offset, )
+        new_albums = await self.get_albums(offset=self.albums_offset)
         if new_albums:
             self.add_albums_to_table(table, new_albums)
             logger.debug(f"Loaded {len(new_albums)} more albums")

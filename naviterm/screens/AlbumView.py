@@ -3,9 +3,11 @@ from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.containers import Vertical
 
-from libopensonic.connection import Connection
-
-
+from libopensonic.async_connection import AsyncConnection
+from libopensonic.connection import Album
+from typing import Optional
+import logging
+logger = logging.getLogger(__name__)  
 class AlbumView(Widget):
     """Widget for viewing an album."""
     
@@ -29,13 +31,22 @@ class AlbumView(Widget):
     def __init__(self, album_id: str):
         super().__init__()
         self.album_id = album_id
-        self.connection: Connection = self.app.connection
-        self.album = self.connection.get_album(album_id=self.album_id)
+        self.connection: AsyncConnection = self.app.connection
+        self.album : Optional[Album] = None
+        
+        
+        
+    async def on_mount(self) -> None:
+        self.album = await self.connection.get_album(album_id=self.album_id)
+        if self.album is None:
+            logger.error(f"Failed to get album with ID: {self.album_id}")
+            return
+        self.album_name = self.album.name
         
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""
         with Vertical(id="album-content"):
-            yield Static("", id="album-header")
+            yield Static(self.album_name, id="album-header")
             # TODO: Add album tracks/songs here
 
 
