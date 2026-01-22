@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, Container
 
 from libopensonic.async_connection import AsyncConnection
-from libopensonic.connection import Album
+from libopensonic.connection import AlbumID3
 from typing import Optional
 import logging
 logger = logging.getLogger(__name__)  
@@ -32,7 +32,7 @@ class AlbumView(Widget):
         super().__init__()
         self.album_id = album_id
         self.connection: AsyncConnection = self.app.connection
-        self.album : Optional[Album] = None
+        self.album : Optional[AlbumID3] = None
         
         
         
