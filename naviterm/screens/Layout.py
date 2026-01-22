@@ -6,15 +6,15 @@ from textual.containers import Horizontal, Container
 from textual.app import ComposeResult
 from textual.widgets import Footer
 from naviterm.widgets.Sidebar import Sidebar
-from textual.widget import Widget
 from naviterm.screens.AllAlbumsView import AllAlbumsView
 from naviterm.screens.AlbumView import AlbumView
-
+from textual.reactive import reactive
 class Layout(Screen):
     """A layout screen with Sidebar and content area."""
     
     BINDINGS = [
-        ("b", "go_back()", "Go back")
+        ("b", "go_back()", "Go back"),
+        ("s", "toggle_sidebar()", "Toggle sidebar")
     ]
     
     logger = logging.getLogger(__name__)
@@ -43,7 +43,11 @@ class Layout(Screen):
         border: solid round white;
         scrollbar-visibility: hidden;
     }
-    
+
+
+    .hidden {
+        display: none;
+    }
     #content-container > * {
         width: 100%;
     }
@@ -65,6 +69,8 @@ class Layout(Screen):
         "AlbumView": AlbumView,
     }
     
+    hide_sidebar = reactive(False)
+    
     def __init__(self, content_widget=None):
         """Initialize the layout with optional content widget.
         
@@ -72,8 +78,8 @@ class Layout(Screen):
             content_widget: Optional widget to display in the content area.
         """
         super().__init__()
-        self.history: list[Widget] = []
-        self.content_widget = "AllAlbumsView"
+        self.history: list[str] = []
+        self.content_widget : str = "AllAlbumsView"
     
     def compose(self) -> ComposeResult:
         """Create child widgets for the layout screen."""
@@ -94,7 +100,7 @@ class Layout(Screen):
         content_container = self.query_one("#content-container", Container)
         footer = self.query_one("#layout-footer", Footer)
         # Remove existing content (except footer)
-        self.history.append(self.content_widget)
+        self.history.append(widget_name)
         content_container.remove_children()
         # Add class to widget and mount before footer
 
@@ -116,3 +122,13 @@ class Layout(Screen):
         option = message.option
         self.content_widget = option
         self.set_content(self.content_widget)
+        
+    def watch_hide_sidebar(self, value: bool) -> None:
+        sidebar_container = self.query_one("#sidebar-container", Container)
+
+        if value:
+            sidebar_container.add_class("hidden")
+        else:
+            sidebar_container.remove_class("hidden")
+    def action_toggle_sidebar(self) -> None:
+        self.hide_sidebar = not self.hide_sidebar
