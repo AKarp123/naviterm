@@ -1,13 +1,23 @@
-from textual.widgets import Static
+from textual.widgets import Static, DataTable
 from textual.widget import Widget
 from textual.app import ComposeResult
 from textual.containers import Vertical, Container
 
 from libopensonic.async_connection import AsyncConnection
-from libopensonic.connection import AlbumID3
+from libopensonic.media.media_types import AlbumID3, Child
 from typing import Optional
 import logging
 logger = logging.getLogger(__name__)  
+
+mime_types = {
+    "audio/mpeg": "mp3",
+    "audio/flac": "flac",
+    "audio/wav": "wav",
+    "audio/aac": "aac",
+    "audio/ogg": "ogg",
+}
+
+
 class AlbumView(Widget):
     """Widget for viewing an album."""
     
@@ -43,20 +53,35 @@ class AlbumView(Widget):
             return
         self.album_name = self.album.name
         
+        table = self.query_one("#album-tracks-table", DataTable)
+        table.cursor_type = "row"
+        table.add_column("Track", width=6)
+        table.add_column("Title", width=50)
+        table.add_column("Duration", width=10)
+        table.add_column("Type", width=10)
+        table.add_column("Bitrate", width=10)
+        
         container = self.query_one("#album-content", Container)
         await container.remove_children()
-        await container.mount(Static(self.album.name, id="album-name"))
+        await container.mount(table)
+        if self.album.song:
+            self.add_tracks_to_table(table, self.album.song)
         
-        
-        
-        
-        
+    def add_tracks_to_table(self, table: DataTable, tracks: list[Child]) -> None:
+        for i, track in enumerate(tracks):
+            table.add_row(i + 1, track.title, self.format_duration(track.duration or 0), mime_types.get(track.content_type or "", "unknown"), f"{track.bit_rate} kbps")
+            
+    def format_duration(self, seconds: int) -> str:
+        minutes = seconds // 60
+        remaining_seconds = seconds % 60
+        return f"{minutes}:{remaining_seconds:02d}"
         
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""
         with Vertical(id="album-view"):
             with Container(id="album-content"):
                 yield Static("Loading...", id="album-loading")
+                yield DataTable(id="album-tracks-table")
 
 
 
