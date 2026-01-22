@@ -105,7 +105,12 @@ class AllAlbumsView(Widget):
         if event.key == "down":
             table = self.query_one("#albums-table", DataTable)
             # Check if we're close to the bottom of the table
-            if table.cursor_row >= table.row_count - 10 and not self.loading_more_albums:
+            if (
+                table.row_count > 10 and
+                table.cursor_row is not None and
+                table.cursor_row >= table.row_count - 3 and
+                not self.loading_more_albums
+            ):
                 self.run_worker(self.load_more_albums)
                 event.stop()
         elif event.key == "enter":
