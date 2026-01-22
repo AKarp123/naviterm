@@ -4,6 +4,9 @@ from textual.message import Message
 from textual.widget import Widget
 from textual.widgets import DataTable
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 OPTIONS = [
     "Recently Added",
@@ -48,17 +51,10 @@ class Sidebar(Widget):
             super().__init__()
             self.option = option
 
-    def on_key(self, event: Key) -> None:
-        """Handle key events."""
-        if event.key in {"down", "up", "enter"}:
-            table = self.query_one("#sidebar-table", DataTable)
-            # Ensure a row is selected; default to first row
-            if table.cursor_row is None:
-                table.cursor_coordinate = (0, 0)
-            cursor_row = table.cursor_row
-            if cursor_row is not None and 0 <= cursor_row < len(OPTIONS):
-                self.post_message(self.SidebarOptionSelected(OPTIONS[cursor_row]))
-            event.stop()
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Handle row highlighting."""
+        logger.debug(f"Row highlighted: {event.row_key.value}")
+        self.post_message(self.SidebarOptionSelected(event.row_key.value))
         
 
     def compose(self) -> ComposeResult:

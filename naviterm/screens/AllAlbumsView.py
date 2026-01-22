@@ -5,6 +5,7 @@ from textual.widget import Widget
 import logging
 from libopensonic.async_connection import AsyncConnection
 from libopensonic.media.media_types import Album
+from textual.message import Message
 logger = logging.getLogger(__name__)
 
 class AllAlbumsView(Widget):
@@ -19,6 +20,12 @@ class AllAlbumsView(Widget):
         
     }
     """
+    
+    class Selected(Message):
+        """Message emitted when an album is selected."""
+        def __init__(self, album_id: str):
+            super().__init__()
+            self.album_id = album_id
     
     def __init__(self):
         super().__init__()
@@ -78,6 +85,7 @@ class AllAlbumsView(Widget):
             return
 
         logger.debug("Viewing album with ID: %s", album_id)
+        self.post_message(self.Selected(album_id))
 
 
     async def load_more_albums(self) -> None:
@@ -90,6 +98,7 @@ class AllAlbumsView(Widget):
             self.add_albums_to_table(table, new_albums)
             logger.debug(f"Loaded {len(new_albums)} more albums")
         self.loading_more_albums = False
+        
     
     def on_key(self, event: Key) -> None:
         """Handle key events."""
@@ -102,6 +111,9 @@ class AllAlbumsView(Widget):
         elif event.key == "enter":
             self.view_album()
             event.stop()
+    
+    
+    
             
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""

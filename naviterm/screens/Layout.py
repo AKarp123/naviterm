@@ -9,6 +9,12 @@ from naviterm.widgets.Sidebar import Sidebar
 from naviterm.screens.AllAlbumsView import AllAlbumsView
 from naviterm.screens.AlbumView import AlbumView
 from textual.reactive import reactive
+from textual.widget import Widget
+from typing import Any
+logger = logging.getLogger(__name__)
+
+
+
 class Layout(Screen):
     """A layout screen with Sidebar and content area."""
     
@@ -70,51 +76,71 @@ class Layout(Screen):
     }
     
     hide_sidebar = reactive(False)
-    content_widget = reactive("AllAlbumsView")
     
-    def __init__(self, content_widget=None):
+    def __init__(self):
         """Initialize the layout with optional content widget.
         
         Args:
             content_widget: Optional widget to display in the content area.
         """
         super().__init__()
-        self.history: list[str] = []
+        self.history: list[Widget] = [AllAlbumsView()]
+        self.content_widget : Widget = AllAlbumsView()
     
-    
-    def watch_content_widget(self, widget_name: str) -> None:
-        """Set the content widget in the content area.
-        
-        Args:
-            widget_name: Widget name to display in the content area.
-        """
-        try:
-            content_container = self.query_one("#content-container", Container)
-        except Exception as e:
-            return
-        footer = self.query_one("#layout-footer", Footer)
-        # Remove existing content (except footer)
-        self.history.append(widget_name)
-        content_container.remove_children()
-        # Add class to widget and mount before footer
-
-        content_container.mount(self.CONTENT_WIDGETS[widget_name](), before=footer)
     
     
     def on_mount(self) -> None:
         """Called when the screen is mounted."""
         pass
     
+    async def push_widget(self, widget: Widget) -> None:
+        """Push a widget to the content area."""
+        self.content_widget = widget
+        
+        await self.remove_widget()
+        await self.set_widget(widget)
+        self.history.append(widget)
+    
+    async def pop_widget(self) -> None:
+        """Pop a widget from the content area."""
+        if len(self.history) > 1:
+            self.content_widget = self.history.pop()
+            await self.remove_widget()
+            content_container = self.query_one("#content-container", Container)
+            await content_container.mount(self.content_widget)
+            self.history.pop()
+            
+    async def set_widget(self, widget: Widget) -> None:
+        """Set the current widget."""
+        self.content_widget = widget
+        content_container = self.query_one("#content-container", Container)
+        await self.remove_widget()
+        await content_container.mount(widget)
+        self.history = [widget]
+    
+    
+    async def remove_widget(self) -> None:
+        """Remove the current widget."""
+        content_container = self.query_one("#content-container", Container)
+        await content_container.remove_children()
+    
     def action_go_back(self) -> None:
         """Go back to the previous screen."""
         if len(self.history) > 0:
             self.content_widget = self.history.pop()
 
-    def on_sidebar_option_selected(self, message: Sidebar.SidebarOptionSelected) -> None:
+    async def on_sidebar_option_selected(self, message: Sidebar.SidebarOptionSelected) -> None:
         """Handle sidebar navigation to switch screens/content."""
         option = message.option
         self.content_widget = option
-        self.set_content(self.content_widget)
+        await self.set_widget(self.content_widget)
+
+    
+    async def on_all_albums_view_selected(self, message: AllAlbumsView.Selected) -> None:
+        """Handle album selection."""
+        logger.debug(f"Album selected: {message.album_id}")
+        self.content_widget = AlbumView(message.album_id)
+        await self.push_widget(self.content_widget)
         
     def watch_hide_sidebar(self, value: bool) -> None:
         try: # Skip before the screen is mounted
@@ -129,6 +155,7 @@ class Layout(Screen):
     def action_toggle_sidebar(self) -> None:
         self.hide_sidebar = not self.hide_sidebar
         
+    
         
     def compose(self) -> ComposeResult:
         """Create child widgets for the layout screen."""
@@ -137,5 +164,5 @@ class Layout(Screen):
                 yield Sidebar()
             
             with Container(id="content-container"):
-                yield self.CONTENT_WIDGETS[self.content_widget]()
+                yield self.content_widget
             yield Footer(id="layout-footer")

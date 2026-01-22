@@ -1,7 +1,7 @@
 from textual.widgets import Static
 from textual.widget import Widget
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Vertical, Container
 
 from libopensonic.async_connection import AsyncConnection
 from libopensonic.connection import Album
@@ -43,11 +43,20 @@ class AlbumView(Widget):
             return
         self.album_name = self.album.name
         
+        container = self.query_one("#album-content", Container)
+        await container.remove_children()
+        await container.mount(Static(self.album.name, id="album-name"))
+        
+        
+        
+        
+        
+        
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""
-        with Vertical(id="album-content"):
-            yield Static(self.album_name, id="album-header")
-            # TODO: Add album tracks/songs here
+        with Vertical(id="album-view"):
+            with Container(id="album-content"):
+                yield Static("Loading...", id="album-loading")
 
 
 
