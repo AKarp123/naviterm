@@ -30,7 +30,7 @@ class NavitermApp(App):
         logger.debug("Starting NavitermApp")
         config = load_config()
         if config.get("username") and config.get("password") and config.get("server_url"):
-            self.connection = AsyncConnection(base_url=config.get("server_url"), username=config.get("username"), password=config.get("password"), app_name="Naviterm", port=443)
+            self.connection = AsyncConnection(base_url=config.get("server_url", ""), username=config.get("username", ""), password=config.get("password", ""), app_name="Naviterm", port=443)
             try:
                 await self.connection.ping()
                 self.push_screen(Layout())

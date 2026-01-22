@@ -91,6 +91,7 @@ class Layout(Screen):
     
     def on_mount(self) -> None:
         """Called when the screen is mounted."""
+        print(self.history)
         pass
     
     async def push_widget(self, widget: Widget) -> None:
@@ -104,19 +105,18 @@ class Layout(Screen):
     async def pop_widget(self) -> None:
         """Pop a widget from the content area."""
         if len(self.history) > 1:
-            self.content_widget = self.history.pop()
+            self.history.pop()  # Remove current widget
+            self.content_widget = self.history[-1]  # Get previous widget
             await self.remove_widget()
             content_container = self.query_one("#content-container", Container)
             await content_container.mount(self.content_widget)
-            self.history.pop()
+            print(self.history)
             
     async def set_widget(self, widget: Widget) -> None:
         """Set the current widget."""
-        self.content_widget = widget
         content_container = self.query_one("#content-container", Container)
         await self.remove_widget()
         await content_container.mount(widget)
-        self.history = [widget]
     
     
     async def remove_widget(self) -> None:
@@ -124,15 +124,14 @@ class Layout(Screen):
         content_container = self.query_one("#content-container", Container)
         await content_container.remove_children()
     
-    def action_go_back(self) -> None:
+    async def action_go_back(self) -> None:
         """Go back to the previous screen."""
-        if len(self.history) > 0:
-            self.content_widget = self.history.pop()
+        await self.pop_widget()
 
     async def on_sidebar_option_selected(self, message: Sidebar.SidebarOptionSelected) -> None:
         """Handle sidebar navigation to switch screens/content."""
         option = message.option
-        self.content_widget = option
+        self.content_widget = self.CONTENT_WIDGETS.get(option, AllAlbumsView())()
         await self.set_widget(self.content_widget)
 
     
