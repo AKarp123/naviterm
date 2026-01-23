@@ -27,11 +27,13 @@ class AllAlbumsView(Widget):
             super().__init__()
             self.album_id = album_id
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.albums_offset = 0
         self.connection: AsyncConnection = self.app.connection
+        self.albums : list[Album] = []
         self.loading_more_albums = False
+        self.table_row = 0
         
     async def on_mount(self) -> None:
         table = self.query_one("#albums-table", DataTable)
@@ -44,8 +46,14 @@ class AllAlbumsView(Widget):
         
         # Add albums to the table
         
-        albums = await self.get_albums(count=self.app.size.height, offset=0)
-        self.add_albums_to_table(table, albums)
+        if( len(self.albums) == 0): #only refetch if we have no albums (first load)
+            albums = await self.get_albums(count=self.app.size.height, offset=self.albums_offset)
+            self.albums.extend(albums)
+            self.albums_offset = len(self.albums)
+        
+        self.add_albums_to_table(table, self.albums)
+        table.move_cursor(row=self.table_row)
+        
 
     async def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:
         """Get all albums from the server."""
@@ -67,7 +75,6 @@ class AllAlbumsView(Widget):
             
             table.add_row(artist, album_name, year, created, key=album.id)
         
-        self.albums_offset += len(albums)
         print(f"Albums offset: {self.albums_offset}")
     def view_album(self) -> None:
         """View an album."""
@@ -94,26 +101,31 @@ class AllAlbumsView(Widget):
         table = self.query_one("#albums-table", DataTable)
         print(f"Loading more albums with offset: {self.albums_offset}")
         new_albums = await self.get_albums(offset=self.albums_offset)
+        self.albums.extend(new_albums)
+        self.albums_offset = len(self.albums)
         if new_albums:
             self.add_albums_to_table(table, new_albums)
+            
             logger.debug(f"Loaded {len(new_albums)} more albums")
         self.loading_more_albums = False
         
     
+    
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Handle row highlighted event to load more albums if needed."""
+        table = self.query_one("#albums-table", DataTable)
+        self.table_row = event.cursor_row
+        if (
+            table.row_count > 10 and
+            event.cursor_row >= table.row_count - 3 and
+            not self.loading_more_albums
+        ):
+            self.run_worker(self.load_more_albums)
+        
+    
     def on_key(self, event: Key) -> None:
         """Handle key events."""
-        if event.key == "down":
-            table = self.query_one("#albums-table", DataTable)
-            # Check if we're close to the bottom of the table
-            if (
-                table.row_count > 10 and
-                table.cursor_row is not None and
-                table.cursor_row >= table.row_count - 3 and
-                not self.loading_more_albums
-            ):
-                self.run_worker(self.load_more_albums)
-                event.stop()
-        elif event.key == "enter":
+        if event.key == "enter":
             self.view_album()
             event.stop()
     

@@ -84,8 +84,11 @@ class Layout(Screen):
             content_widget: Optional widget to display in the content area.
         """
         super().__init__()
-        self.history: list[Widget] = [AllAlbumsView()]
-        self.content_widget : Widget = AllAlbumsView()
+        all_album_view = AllAlbumsView()
+        self.history: list[Widget] = [all_album_view]
+        self.content_widget : Widget = all_album_view
+        
+
     
     
     
@@ -159,9 +162,9 @@ class Layout(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets for the layout screen."""
         with Horizontal():
-            with Container(id="sidebar-container"):
+            with Container(id="sidebar-container")  :
                 yield Sidebar()
             
             with Container(id="content-container"):
-                yield self.content_widget
+                yield AllAlbumsView(id="AllAlbumsView")
             yield Footer(id="layout-footer")
