@@ -21,6 +21,7 @@ mime_types = {
 class AlbumView(Widget):
     """Widget for viewing an album."""
     
+
     CSS = """
     #album-content {
         width: 100%;
