@@ -9,7 +9,11 @@ from textual.message import Message
 logger = logging.getLogger(__name__)
 
 class AllAlbumsView(Widget):
-    """Widget for viewing all albums."""
+    """Widget for viewing all albums.
+    
+    TODO: Implement caching to prevent flash when hitting back button.
+    
+    """
     
     CSS = """
     #albums-table {
@@ -37,6 +41,7 @@ class AllAlbumsView(Widget):
         
     async def on_mount(self) -> None:
         table = self.query_one("#albums-table", DataTable)
+        table.focus()
         table.cursor_type = "row"
         # Set column widths: Artist gets more space, Album is smaller, Year is minimal
         table.add_column("Artist", width=27)
@@ -53,6 +58,7 @@ class AllAlbumsView(Widget):
         
         self.add_albums_to_table(table, self.albums)
         table.move_cursor(row=self.table_row)
+
         
 
     async def get_albums(self, count: int = 50, offset: int = 0) -> list[Album]:

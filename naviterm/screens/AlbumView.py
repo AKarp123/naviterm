@@ -64,6 +64,7 @@ class AlbumView(Widget):
         container = self.query_one("#album-content", Container)
         await container.remove_children()
         await container.mount(table)
+        table.focus()
         if self.album.song:
             self.add_tracks_to_table(table, self.album.song)
         
