@@ -30,22 +30,27 @@ class Sidebar(Widget):
     
     
 
-    DataTable > .datatable--header,
-    DataTable > .datatable--header-hover,
-    DataTable > .datatable--header-cursor {
-        background: transparent !important;
-        color: $text;
-        text-style: bold;
-    }
-    DataTable {
+    #sidebar-widget {
+        scrollbar-visibility: hidden;
         background: transparent;
     }
-    DataTableHeader {
-    background: transparent;
-    color: $text;
-    text-style: bold;
-}
-    
+
+    #sidebar-table > .datatable--header,
+        #sidebar-table > .datatable--header-hover,
+        #sidebar-table > .datatable--header-cursor {
+            background: transparent !important;
+            color: $text;
+            text-style: bold;
+        }
+        #sidebar-table {
+            background: transparent !important;
+        }
+        #sidebar-table DataTableHeader {
+            background: transparent;
+            color: $text;
+            text-style: bold;
+        }
+        
     
     """
     def on_mount(self) -> None:
