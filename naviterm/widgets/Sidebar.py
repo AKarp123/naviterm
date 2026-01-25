@@ -1,3 +1,4 @@
+from textual.containers import Container
 from textual.app import ComposeResult
 from textual.events import Key
 from textual.message import Message
@@ -24,19 +25,29 @@ class Sidebar(Widget):
     def __init__(self):
         super().__init__()
 
-    CSS = """
-    Sidebar {
-        width: 20%;
-        height: 100%;
-        border: solid round white;
-        scrollbar-visibility: hidden;
-    }
-    
-    #sidebar-table {
-        scrollbar-visibility: hidden;
-    }
-    """
 
+    DEFAULT_CSS = """
+    
+    
+
+    DataTable > .datatable--header,
+    DataTable > .datatable--header-hover,
+    DataTable > .datatable--header-cursor {
+        background: transparent !important;
+        color: $text;
+        text-style: bold;
+    }
+    DataTable {
+        background: transparent;
+    }
+    DataTableHeader {
+    background: transparent;
+    color: $text;
+    text-style: bold;
+}
+    
+    
+    """
     def on_mount(self) -> None:
         table = self.query_one("#sidebar-table", DataTable)
         table.cursor_type = "row"
@@ -58,4 +69,5 @@ class Sidebar(Widget):
         
 
     def compose(self) -> ComposeResult:
+
         yield DataTable(id="sidebar-table")

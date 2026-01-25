@@ -41,14 +41,6 @@ class Layout(Screen):
         margin-right: 1;
         scrollbar-visibility: hidden;
     }
-    
-    #content-container {
-        width: 1fr;
-        height: 100%;
-        layout: vertical;
-        border: solid round white;
-        scrollbar-visibility: hidden;
-    }
 
 
     .hidden {

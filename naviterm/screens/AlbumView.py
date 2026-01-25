@@ -22,20 +22,39 @@ class AlbumView(Widget):
     """Widget for viewing an album."""
     
 
-    CSS = """
+    DEFAULT_CSS = """
     #album-content {
+        border: solid round white;
         width: 100%;
-        height: 100%;
-        padding: 1;
         scrollbar-visibility: hidden;
+
     }
+    
+    
+    #album-content > DataTable > Header {
+        background: transparent;
+    }
+    
+    
     
     #album-header {
         width: 100%;
         height: 3;
         content-align: center middle;
         text-style: bold;
-        margin-bottom: 1;
+        border: solid round white;
+    }
+    
+
+    DataTable > .datatable--header,
+    DataTable > .datatable--header-hover,
+    DataTable > .datatable--header-cursor {
+        background: transparent !important;
+        color: $text;
+        text-style: bold;
+    }
+    DataTable {
+        background: transparent;
     }
     """
     
@@ -52,7 +71,8 @@ class AlbumView(Widget):
         if self.album is None:
             logger.error(f"Failed to get album with ID: {self.album_id}")
             return
-        self.album_name = self.album.name
+        self.update_header()
+        self.update_border_titles()
         
         table = self.query_one("#album-tracks-table", DataTable)
         table.cursor_type = "row"
@@ -63,11 +83,23 @@ class AlbumView(Widget):
         table.add_column("Bitrate", width=10)
         
         container = self.query_one("#album-content", Container)
+        container.border_title = "Tracks"
         await container.remove_children()
         await container.mount(table)
         table.focus()
         if self.album.song:
             self.add_tracks_to_table(table, self.album.song)
+            
+    def update_header(self) -> None:
+        header = self.query_one("#album-title", Static)
+        header.update(f"Album: {self.album.name if self.album else 'Loading...'}")
+        
+    def update_border_titles(self) -> None:
+        header = self.query_one("#album-header", Container)
+        header.border_title = 'Album Info'
+        body = self.query_one("#album-content", Container)
+        body.border_title = 'Tracks'
+        
         
     def add_tracks_to_table(self, table: DataTable, tracks: list[Child]) -> None:
         for i, track in enumerate(tracks):
@@ -81,6 +113,8 @@ class AlbumView(Widget):
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""
         with Vertical(id="album-view"):
+            with Container(id="album-header"):
+                yield Static(f"Album: {self.album.name if self.album else 'Loading...'}", id="album-title")
             with Container(id="album-content"):
                 yield Static("Loading...", id="album-loading")
                 yield DataTable(id="album-tracks-table")

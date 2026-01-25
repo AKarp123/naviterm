@@ -1,5 +1,6 @@
 from textual.events import Key
-from textual.widgets import DataTable
+from textual.widgets import DataTable, Static
+from textual.containers import Container
 from textual.app import ComposeResult
 from textual.widget import Widget
 import logging
@@ -15,14 +16,27 @@ class AllAlbumsView(Widget):
     
     """
     
-    CSS = """
-    #albums-table {
+    DEFAULT_CSS = """
+    #albums-container {
+        layout: vertical;
         width: 100%;
         height: 100%;
         border: solid round white;
         scrollbar-visibility: hidden;
         
     }
+    
+    DataTable > .datatable--header,
+    DataTable > .datatable--header-hover,
+    DataTable > .datatable--header-cursor {
+        background: transparent !important;
+        color: $text;
+        text-style: bold;
+    }
+    DataTable {
+        background: transparent;
+    }
+
     """
     
     class Selected(Message):
@@ -140,6 +154,7 @@ class AllAlbumsView(Widget):
             
     def compose(self) -> ComposeResult:
         """Create child widgets for the album view widget."""
-        yield DataTable(id="albums-table")
+        with Container(id="albums-container"):
+            yield DataTable(id="albums-table")
 
 
