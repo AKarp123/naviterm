@@ -40,9 +40,13 @@ class AlbumView(Widget):
     #album-header {
         width: 100%;
         height: 3;
+    
         content-align: center middle;
         text-style: bold;
         border: solid round white;
+    }
+    #album-header > * {
+        margin-left: 1;
     }
     
 
