@@ -1,3 +1,4 @@
+from functools import reduce
 from textual.widgets import Static, DataTable
 from textual.widget import Widget
 from textual.app import ComposeResult
@@ -8,6 +9,7 @@ from libopensonic.media.media_types import AlbumID3, Child
 from typing import Optional
 import logging
 logger = logging.getLogger(__name__)  
+from textual import log
 
 mime_types = {
     "audio/mpeg": "mp3",
@@ -39,9 +41,7 @@ class AlbumView(Widget):
     
     #album-header {
         width: 100%;
-        height: 3;
-    
-        content-align: center middle;
+        height: auto;
         text-style: bold;
         border: solid round white;
     }
@@ -50,14 +50,14 @@ class AlbumView(Widget):
     }
     
 
-    DataTable > .datatable--header,
-    DataTable > .datatable--header-hover,
-    DataTable > .datatable--header-cursor {
+    #album-content > DataTable > .datatable--header,
+    #album-content > DataTable > .datatable--header-hover,
+    #album-content > DataTable > .datatable--header-cursor {
         background: transparent !important;
         color: $text;
         text-style: bold;
     }
-    DataTable {
+    #album-content > DataTable {
         background: transparent;
     }
     """
@@ -75,6 +75,7 @@ class AlbumView(Widget):
         if self.album is None:
             logger.error(f"Failed to get album with ID: {self.album_id}")
             return
+
         self.update_header()
         self.update_border_titles()
         
@@ -95,8 +96,23 @@ class AlbumView(Widget):
             self.add_tracks_to_table(table, self.album.song)
             
     def update_header(self) -> None:
-        header = self.query_one("#album-title", Static)
-        header.update(f"Album: {self.album.name if self.album else 'Loading...'}")
+        header_container = self.query_one("#album-header", Container)
+        header_container.remove_children()
+        header_container.mount(Static(f"Album: {self.album.name if self.album else 'Loading...'}", id="album-title"))
+        header_container.mount(Static(f"Album Artist: {self.album.artist if self.album else 'Loading...'}", id="album-artist"))
+        header_container.mount(Static(f"Duration: {self.format_duration(self.album.duration or 0) if self.album else 'Loading...'}", id="album-duration"))
+        header_container.mount(Static(f"Year: {self.album.year if self.album and self.album.year else 'Unknown'}", id="album-year"))
+
+        if self.album and self.album.genres:
+            
+            genres_str = reduce(
+            lambda acc, g: acc + ", " + g.name,
+            self.album.genres,
+            ""
+            ).lstrip(", ")
+            header_container.mount(Static(f"Genres: {genres_str}", id="album-genres"))
+            
+        
         
     def update_border_titles(self) -> None:
         header = self.query_one("#album-header", Container)
@@ -118,7 +134,8 @@ class AlbumView(Widget):
         """Create child widgets for the album view widget."""
         with Vertical(id="album-view"):
             with Container(id="album-header"):
-                yield Static(f"Album: {self.album.name if self.album else 'Loading...'}", id="album-title")
+                yield Static("Loading...")
+
             with Container(id="album-content"):
                 yield Static("Loading...", id="album-loading")
                 yield DataTable(id="album-tracks-table")

@@ -1,9 +1,8 @@
-from textual.containers import Container
 from textual.app import ComposeResult
-from textual.events import Key
 from textual.message import Message
 from textual.widget import Widget
-from textual.widgets import DataTable
+from textual.widgets import OptionList
+from textual.containers import Container
 
 import logging
 logger = logging.getLogger(__name__)
@@ -27,38 +26,35 @@ class Sidebar(Widget):
 
 
     DEFAULT_CSS = """
-    
-    
-
     #sidebar-widget {
         scrollbar-visibility: hidden;
         background: transparent;
     }
 
-    #sidebar-table > .datatable--header,
-        #sidebar-table > .datatable--header-hover,
-        #sidebar-table > .datatable--header-cursor {
-            background: transparent !important;
-            color: $text;
-            text-style: bold;
-        }
-        #sidebar-table {
-            background: transparent !important;
-        }
-        #sidebar-table DataTableHeader {
-            background: transparent;
-            color: $text;
-            text-style: bold;
-        }
-        
-    
+    #sidebar-options {
+        background: transparent;
+        border: none;
+        padding: 0 1;
+        scrollbar-visibility: hidden;
+    }
+
+    #sidebar-options > .option-list--option-highlighted {
+        background: $block-cursor-blurred-background;
+        color: $block-cursor-blurred-foreground;
+        text-style: $block-cursor-blurred-text-style;
+    }
+
+    #sidebar-options:focus > .option-list--option-highlighted {
+        background: $block-cursor-background;
+        color: $block-cursor-foreground;
+        text-style: $block-cursor-text-style;
+    }
     """
     def on_mount(self) -> None:
-        table = self.query_one("#sidebar-table", DataTable)
-        table.cursor_type = "row"
-        table.add_column("Options", width=21)
-        for option in OPTIONS:
-            table.add_row(option, key=option)
+        option_list = self.query_one("#sidebar-options", OptionList)
+        option_list.set_options(OPTIONS)
+        if OPTIONS:
+            option_list.highlighted = 0
             
     class SidebarOptionSelected(Message):
         """Message emitted when a sidebar option is selected."""
@@ -67,12 +63,14 @@ class Sidebar(Widget):
             super().__init__()
             self.option = option
 
-    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        """Handle row highlighting."""
-        logger.debug(f"Row highlighted: {event.row_key.value}")
-        self.post_message(self.SidebarOptionSelected(event.row_key.value))
+    def on_option_list_option_highlighted(
+        self, event: OptionList.OptionHighlighted
+    ) -> None:
+        """Handle option highlighting."""
+        option_label = str(event.option.prompt)
+        logger.debug(f"Option highlighted: {option_label}")
+        self.post_message(self.SidebarOptionSelected(option_label))
         
 
     def compose(self) -> ComposeResult:
-
-        yield DataTable(id="sidebar-table")
+        yield OptionList(id="sidebar-options")

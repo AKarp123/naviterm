@@ -86,7 +86,8 @@ class Layout(Screen):
     
     def on_mount(self) -> None:
         """Called when the screen is mounted."""
-        print(self.history)
+        sidebar_container = self.query_one("#sidebar-container", Container)
+        sidebar_container.border_title = "Navigation"
         pass
     
     async def push_widget(self, widget: Widget) -> None:
@@ -158,7 +159,7 @@ class Layout(Screen):
     def compose(self) -> ComposeResult:
         """Create child widgets for the layout screen."""
         with Horizontal():
-            with Container(id="sidebar-container")  :
+            with Container(id="sidebar-container"):
                 yield Sidebar()
             
             with Container(id="content-container"):

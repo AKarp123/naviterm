@@ -26,14 +26,14 @@ class AllAlbumsView(Widget):
         
     }
     
-    DataTable > .datatable--header,
-    DataTable > .datatable--header-hover,
-    DataTable > .datatable--header-cursor {
+    #albums-container > DataTable > .datatable--header,
+    #albums-container > DataTable > .datatable--header-hover,
+    #albums-container > DataTable > .datatable--header-cursor {
         background: transparent !important;
         color: $text;
         text-style: bold;
     }
-    DataTable {
+    #albums-container > DataTable {
         background: transparent;
     }
 
@@ -55,6 +55,8 @@ class AllAlbumsView(Widget):
         
     async def on_mount(self) -> None:
         table = self.query_one("#albums-table", DataTable)
+        container = self.query_one("#albums-container", Container)
+        container.border_title = "All Albums"
         table.focus()
         table.cursor_type = "row"
         # Set column widths: Artist gets more space, Album is smaller, Year is minimal
