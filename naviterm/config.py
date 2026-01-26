@@ -7,6 +7,8 @@ import json
 config_dir = user_config_dir("naviterm", appauthor=False)
 config_file = os.path.join(config_dir, "config.json")
 
+config_playback_file = os.path.join(config_dir, "playback.json")
+
 
 def get_config_path() -> str:
     """Get the path to the config file."""
@@ -38,4 +40,22 @@ def save_config(username: str, password: str, server_url: str) -> None:
             },
             f,
         )
+        
+def load_playback_config() -> dict:
+    """Load playback configuration from file, creating it if it doesn't exist."""
+    config = {}
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
+    if not os.path.exists(config_playback_file):
+        with open(config_playback_file, "w") as f:
+            json.dump({}, f)
 
+    with open(config_playback_file, "r") as f:
+        config = json.load(f)
+    return config
+
+def save_playback_config(playback_config: dict) -> None:
+    """Save playback configuration to file."""
+    with open(config_playback_file, "w") as f:
+        json.dump(playback_config, f)
+        

@@ -1,5 +1,6 @@
 """Main application class for Naviterm."""
 
+from naviterm.player import Queue
 from textual.app import App
 from textual.logging import TextualHandler
 
@@ -23,6 +24,7 @@ class NavitermApp(App):
     def __init__(self):
         super().__init__()
         self.connection : Optional[AsyncConnection] = None
+        self.queue = Queue()
 
     async def on_mount(self) -> None:
         """Set up the initial screen when the app starts."""
@@ -37,6 +39,10 @@ class NavitermApp(App):
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
                 self.push_screen(LoginScreen())
+                
+    def on_unmount(self) -> None:
+        """Clean up on app exit."""
+        self.queue.save_config()
                 
     
             
