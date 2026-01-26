@@ -65,7 +65,7 @@ class AlbumView(Widget):
     def __init__(self, album_id: str):
         super().__init__()
         self.album_id = album_id
-        self.connection: AsyncConnection = self.app.connection
+        self.connection: AsyncConnection = self.app.connection #type: ignore
         self.album : Optional[AlbumID3] = None
         
         
@@ -82,6 +82,12 @@ class AlbumView(Widget):
         table = self.query_one("#album-tracks-table", DataTable)
         table.cursor_type = "row"
         table.add_column("Track", width=6)
+        needs_artist = any(
+            track.artist != (self.album.artist if self.album else None)
+            for track in self.album.song or []
+        )
+        if needs_artist:
+            table.add_column("Artist",key="Artist", width=30)
         table.add_column("Title", width=50)
         table.add_column("Duration", width=10)
         table.add_column("Type", width=10)
@@ -104,7 +110,6 @@ class AlbumView(Widget):
         header_container.mount(Static(f"Year: {self.album.year if self.album and self.album.year else 'Unknown'}", id="album-year"))
 
         if self.album and self.album.genres:
-            
             genres_str = reduce(
             lambda acc, g: acc + ", " + g.name,
             self.album.genres,
@@ -122,8 +127,26 @@ class AlbumView(Widget):
         
         
     def add_tracks_to_table(self, table: DataTable, tracks: list[Child]) -> None:
+        has_artist = "Artist" in table.columns
         for i, track in enumerate(tracks):
-            table.add_row(i + 1, track.title, self.format_duration(track.duration or 0), mime_types.get(track.content_type or "", "unknown"), f"{track.bit_rate} kbps")
+            if has_artist:
+                table.add_row(
+                    i + 1,
+                    track.artist or (self.album.artist if self.album else "Unknown Artist"),
+                    track.title,
+                    self.format_duration(track.duration or 0),
+                    mime_types.get(track.content_type or "", "unknown"),
+                    f"{track.bit_rate} kbps",
+                )
+
+            else:
+                table.add_row(
+                    i + 1,
+                    track.title,
+                    self.format_duration(track.duration or 0),
+                    mime_types.get(track.content_type or "", "unknown"),
+                    f"{track.bit_rate} kbps"
+                )
             
     def format_duration(self, seconds: int) -> str:
         minutes = seconds // 60

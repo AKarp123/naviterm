@@ -37,6 +37,8 @@ class NavitermApp(App):
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
                 self.push_screen(LoginScreen())
+                
+    
             
             
 

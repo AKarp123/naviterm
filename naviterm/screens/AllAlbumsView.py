@@ -4,6 +4,7 @@ from textual.containers import Container
 from textual.app import ComposeResult
 from textual.widget import Widget
 import logging
+from naviterm import app
 from libopensonic.async_connection import AsyncConnection
 from libopensonic.media.media_types import Album
 from textual.message import Message
@@ -48,7 +49,7 @@ class AllAlbumsView(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.albums_offset = 0
-        self.connection: AsyncConnection = self.app.connection
+        self.connection: AsyncConnection = self.app.connection #type: ignore
         self.albums : list[Album] = []
         self.loading_more_albums = False
         self.table_row = 0
@@ -90,8 +91,8 @@ class AllAlbumsView(Widget):
     def add_albums_to_table(self, table: DataTable, albums: list[Album]) -> None:
         """Add albums to the table."""
         for album in albums:
-            artist = album.artist.replace("\u200b", "") or "Unknown"
-            album_name = album.name.replace("\u200b", "") or "Unknown"
+            artist = (album.artist or "Unknown Artist").replace("\u200b", "")
+            album_name = (album.name or "Unknown Album").replace("\u200b", "")
             year = str(album.year) if album.year else "Unknown"
             created = album.created.split("T")[0] if album.created else "Unknown"
             
@@ -114,7 +115,7 @@ class AllAlbumsView(Widget):
             return
 
         logger.debug("Viewing album with ID: %s", album_id)
-        self.post_message(self.Selected(album_id))
+        self.post_message(self.Selected(album_id or ""))
 
 
     async def load_more_albums(self) -> None:
