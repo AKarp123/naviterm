@@ -32,7 +32,7 @@ class Queue():
         save_playback_config(playback_config)
     
         
-
+    
         
     def add_track(self, track: Child) -> None:
         

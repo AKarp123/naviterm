@@ -1,4 +1,6 @@
+import asyncio
 from functools import reduce
+from textual.events import Key
 from textual.widgets import Static, DataTable
 from textual.widget import Widget
 from textual.app import ComposeResult
@@ -10,6 +12,7 @@ from typing import Optional
 import logging
 logger = logging.getLogger(__name__)  
 from textual import log
+from just_playback import Playback
 
 mime_types = {
     "audio/mpeg": "mp3",
@@ -67,6 +70,7 @@ class AlbumView(Widget):
         self.album_id = album_id
         self.connection: AsyncConnection = self.app.connection #type: ignore
         self.album : Optional[AlbumID3] = None
+        self.player = Playback()
         
         
         
@@ -147,7 +151,37 @@ class AlbumView(Widget):
                     mime_types.get(track.content_type or "", "unknown"),
                     f"{track.bit_rate} kbps"
                 )
+                
+    async def on_key(self, event: Key) -> None:
+        if event.key == "enter":
+            table = self.query_one("#album-tracks-table", DataTable)
+            if table.cursor_row is not None:
+                track_index = table.cursor_row
+                track = self.album.song[track_index] if self.album and self.album.song else None
+                if track:
+                    # track_id = track.id
+                    # data = await self.connection.stream(track_id)
+                    # with open(f"music/{track_id}.flac", "wb") as f:
+                    #     f.write(await data.read())
+                        
+                
+                    # player = Playback()
+                    # player.load_file(f"music/{track_id}.flac")
+                    # player.play()
+                    asyncio.create_task(self.play_track(track.id))
+                
+                
+    async def play_track(self, track_id: str) -> None:
+        """Play a track."""
+        data = await self.connection.stream(track_id)
+        with open(f"music/{track_id}.flac", "wb") as f:
+            f.write(await data.read())
             
+    
+     
+        self.player.load_file(f"music/{track_id}.flac")
+        self.player.play()
+        print(f"Streaming track: {track_id if track_id else 'Unknown'}")
     def format_duration(self, seconds: int) -> str:
         minutes = seconds // 60
         remaining_seconds = seconds % 60

@@ -3,8 +3,8 @@ name = "naviterm"
 version = "0.1.0"
 description = "A TUI Music Player for Navidrome and other opensubsonic-api compatible servers."
 readme = "README.md"
-requires-python = ">=3.14"
 dependencies = [
+    "just-playback>=0.1.8",
     "platformdirs>=4.5.1",
     "py-opensonic>=8.0.1",
     "textual>=0.60.0",
@@ -13,6 +13,9 @@ dependencies = [
 
 [tool.uv]
 package = true
+
+[tool.setuptools.packages.find]
+include = ["naviterm"]
 
 [project.scripts]
 naviterm = "naviterm.main:main"
