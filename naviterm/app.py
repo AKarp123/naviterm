@@ -1,5 +1,6 @@
 """Main application class for Naviterm."""
 
+from naviterm.screens.NowPlaying import NowPlaying
 from naviterm.player import Queue
 from textual.app import App
 from textual.logging import TextualHandler
@@ -22,7 +23,7 @@ class NavitermApp(App):
     
   
     BINDINGS = [
-        ("n", "toggle_now_playing", "Toggle Now Playing"),
+        ("n", "toggle_now_playing()", "Toggle Now Playing"),
     ]
 
     
@@ -52,6 +53,13 @@ class NavitermApp(App):
                     logger.debug("Login successful, proceeding to main layout")
                     self.push_screen(Layout())
 
+
+    def action_toggle_now_playing(self) -> None:
+        """Toggle the Now Playing screen."""
+        if self.screen_stack and self.screen_stack[-1].__class__.__name__ == "NowPlaying":
+            self.pop_screen()
+        else:
+            self.push_screen(NowPlaying())
                 
     def on_unmount(self) -> None:
         assert self.queue is not None

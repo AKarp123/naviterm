@@ -5,6 +5,14 @@ from naviterm.config import save_playback_config
 from just_playback import Playback
 from libopensonic.async_connection import AsyncConnection
 
+mime_types = {
+"audio/mpeg": "mp3",
+"audio/flac": "flac",
+"audio/wav": "wav",
+"audio/aac": "aac",
+"audio/ogg": "ogg",
+}
+
 class Queue():
     """This class controls the queue of playable media
     

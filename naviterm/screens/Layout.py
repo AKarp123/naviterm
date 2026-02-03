@@ -150,7 +150,7 @@ class Layout(Screen):
     def action_toggle_sidebar(self) -> None:
         self.hide_sidebar = not self.hide_sidebar
         
-    def check_action(self, action_name: str, parameters: tuple[object, ...]) -> bool:
+    def check_action(self, action_name: str, parameters: tuple[object, ...]) -> bool | None: #type: ignore
         """Check if an action is valid in the current context."""
         if action_name == "go_back":
             return len(self.history) > 1
