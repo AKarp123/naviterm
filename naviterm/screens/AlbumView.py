@@ -104,7 +104,7 @@ class AlbumView(Widget):
         table.focus()
         if self.album.song:
             self.add_tracks_to_table(table, self.album.song)
-            
+                 
     def update_header(self) -> None:
         header_container = self.query_one("#album-header", Container)
         header_container.remove_children()
@@ -155,33 +155,9 @@ class AlbumView(Widget):
     async def on_key(self, event: Key) -> None:
         if event.key == "enter":
             table = self.query_one("#album-tracks-table", DataTable)
-            if table.cursor_row is not None:
-                track_index = table.cursor_row
-                track = self.album.song[track_index] if self.album and self.album.song else None
-                if track:
-                    # track_id = track.id
-                    # data = await self.connection.stream(track_id)
-                    # with open(f"music/{track_id}.flac", "wb") as f:
-                    #     f.write(await data.read())
-                        
-                
-                    # player = Playback()
-                    # player.load_file(f"music/{track_id}.flac")
-                    # player.play()
-                    asyncio.create_task(self.play_track(track.id))
+        
                 
                 
-    async def play_track(self, track_id: str) -> None:
-        """Play a track."""
-        data = await self.connection.stream(track_id)
-        with open(f"music/{track_id}.flac", "wb") as f:
-            f.write(await data.read())
-            
-    
-     
-        self.player.load_file(f"music/{track_id}.flac")
-        self.player.play()
-        print(f"Streaming track: {track_id if track_id else 'Unknown'}")
     def format_duration(self, seconds: int) -> str:
         minutes = seconds // 60
         remaining_seconds = seconds % 60

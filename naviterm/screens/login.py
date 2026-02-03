@@ -77,11 +77,11 @@ class LoginScreen(Screen):
                 yield Button("Login", id="login-button", variant="primary")
         yield Footer()
 
-    def on_button_pressed(self, event: Button.Pressed) -> None:
+    async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press events."""
         logger.debug("Button pressed")
         if event.button.id == "login-button":
-            self.login()
+            await self.login()
             event.stop()
             
     
@@ -101,6 +101,7 @@ class LoginScreen(Screen):
             logger.error(f"Error pinging server: {e}")
             self.post_message(self.PingResult(False))
             return
-        self.app.connection = self.connection
-        self.dismiss()
+        self.app.connection = self.connection #type: ignore
+        self.app.queue = Queue(self.connection) #type: ignore
+        self.dismiss(True)
 

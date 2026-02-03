@@ -2,6 +2,8 @@ from libopensonic.media.media_types import Child
 from naviterm.config import load_playback_config
 import random
 from naviterm.config import save_playback_config
+from just_playback import Playback
+from libopensonic.async_connection import AsyncConnection
 
 class Queue():
     """This class controls the queue of playable media
@@ -11,14 +13,15 @@ class Queue():
     """
     
     
-    def __init__(self) -> None:
-        
-        
+    def __init__(self, connection: AsyncConnection) -> None:
+        self.connection = connection
         self.tracks : list[Child] = []
         self.current_index : int = 0
         playback_config = load_playback_config()
         self.shuffling : bool = playback_config.get("shuffling", False)
         self.repeating : bool = playback_config.get("repeating", False)
+        self.audio_player = Playback()
+
         
         
         
@@ -32,7 +35,6 @@ class Queue():
         save_playback_config(playback_config)
     
         
-    
         
     def add_track(self, track: Child) -> None:
         
@@ -68,6 +70,18 @@ class Queue():
         """
         self.tracks = []
         self.current_index = 0
+        
+    async def play_track(self, track_id: str) -> None:
+        """Play a track."""
+        data = await self.connection.stream(track_id)
+        with open(f"music/{track_id}.{mime_types[data.content_type]}", "wb") as f:
+            f.write(await data.read())
+            
+    
+    
+        self.audio_player.load_file(f"music/{track_id}.{mime_types[data.content_type]}")
+        self.audio_player.play()
+        print(f"Streaming track: {track_id if track_id else 'Unknown'}")
         
     
     

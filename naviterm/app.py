@@ -9,22 +9,28 @@ from .screens import LoginScreen, Layout
 import logging
 from typing import Optional
 from libopensonic.async_connection import AsyncConnection
+from os import listdir, remove
+import tempfile
 
 logging.basicConfig(level=logging.DEBUG, handlers=[TextualHandler()])
 logger = logging.getLogger(__name__)
+temp_dir = tempfile.TemporaryDirectory()
 
 
 class NavitermApp(App):
     """A basic Textualize TUI application."""
     
   
-    
+    BINDINGS = [
+        ("n", "toggle_now_playing", "Toggle Now Playing"),
+    ]
 
     
     def __init__(self):
         super().__init__()
         self.connection : Optional[AsyncConnection] = None
-        self.queue = Queue()
+        self.queue : Optional[Queue] = None
+        self.temp_dir = temp_dir.name
 
     async def on_mount(self) -> None:
         """Set up the initial screen when the app starts."""
@@ -35,14 +41,25 @@ class NavitermApp(App):
             self.connection = AsyncConnection(base_url=config.get("server_url", ""), username=config.get("username", ""), password=config.get("password", ""), app_name="Naviterm", port=443)
             try:
                 await self.connection.ping()
+                self.queue = Queue(self.connection)
                 self.push_screen(Layout())
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
-                self.push_screen(LoginScreen())
+                res = self.push_screen(LoginScreen(), wait_for_dismiss=True)
+                if not res:
+                    self.exit()
+                else:
+                    logger.debug("Login successful, proceeding to main layout")
+                    self.push_screen(Layout())
+
                 
     def on_unmount(self) -> None:
+        assert self.queue is not None
         """Clean up on app exit."""
         self.queue.save_config()
+        for file in listdir("music"):
+            
+            remove(f"music/{file}")
                 
     
             
