@@ -1,7 +1,7 @@
 """Main application class for Naviterm."""
 
 from naviterm.screens.NowPlaying import NowPlaying
-from naviterm.player import Queue
+from naviterm.player import Player
 from textual.app import App
 from textual.logging import TextualHandler
 
@@ -30,7 +30,7 @@ class NavitermApp(App):
     def __init__(self):
         super().__init__()
         self.connection : Optional[AsyncConnection] = None
-        self.queue : Optional[Queue] = None
+        self.player : Optional[Player] = None
         self.temp_dir = temp_dir.name
 
     async def on_mount(self) -> None:
@@ -42,7 +42,7 @@ class NavitermApp(App):
             self.connection = AsyncConnection(base_url=config.get("server_url", ""), username=config.get("username", ""), password=config.get("password", ""), app_name="Naviterm", port=443)
             try:
                 await self.connection.ping()
-                self.queue = Queue(self.connection)
+                self.player = Player(self.connection)
                 self.push_screen(Layout())
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
@@ -62,9 +62,9 @@ class NavitermApp(App):
             self.push_screen(NowPlaying())
                 
     def on_unmount(self) -> None:
-        assert self.queue is not None
+        assert self.player is not None
         """Clean up on app exit."""
-        self.queue.save_config()
+        self.player.save_config()
         for file in listdir("music"):
             
             remove(f"music/{file}")

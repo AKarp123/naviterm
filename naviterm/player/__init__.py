@@ -1,1 +1,5 @@
-from .queue import Queue
+from .player import Player
+
+
+
+__all__ = ["Player"]

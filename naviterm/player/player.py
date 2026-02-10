@@ -13,8 +13,8 @@ mime_types = {
 "audio/ogg": "ogg",
 }
 
-class Queue():
-    """This class controls the queue of playable media
+class Player():
+    """This class manages the playback of the music player
     
     
     
@@ -25,6 +25,8 @@ class Queue():
         self.connection = connection
         self.tracks : list[Child] = []
         self.current_index : int = 0
+        self.del_index = -1 # Left ptr to delete tracks that have been played from cache
+        self.enqueue_index = self.current_index # Right ptr to cache tracks to be played next in the queue
         playback_config = load_playback_config()
         self.shuffling : bool = playback_config.get("shuffling", False)
         self.repeating : bool = playback_config.get("repeating", False)
@@ -58,6 +60,12 @@ class Queue():
             return self.tracks[self.current_index]
         return None
     
+    
+    def get_queue(self) -> list[Child]:
+        """Get the current queue of tracks.
+        """
+        return self.tracks
+    
     def shuffle(self) -> None:
         """Shuffle the queue.
         """
@@ -78,6 +86,21 @@ class Queue():
         """
         self.tracks = []
         self.current_index = 0
+        self.del_index = -1
+        self.enqueue_index = 0 
+        
+        
+    def add_to_queue(self, tracks: Child | list[Child]) -> None:
+        """Add a track or list of tracks to the end of the queue.
+        """
+        if isinstance(tracks, Child):
+            self.tracks.append(tracks)
+        else:
+            self.tracks.extend(tracks)
+        
+        
+        
+    
         
     async def play_track(self, track_id: str) -> None:
         """Play a track."""
@@ -91,6 +114,7 @@ class Queue():
         self.audio_player.play()
         print(f"Streaming track: {track_id if track_id else 'Unknown'}")
         
-    
+    async def wait_for_current_track_end(self, duration: int) -> None:
+        pass
     
     pass
