@@ -11,11 +11,15 @@ import logging
 from typing import Optional
 from libopensonic.async_connection import AsyncConnection
 from os import listdir, remove
-import tempfile
+from pathlib import Path
+from platformdirs import user_cache_dir
 
 logging.basicConfig(level=logging.DEBUG, handlers=[TextualHandler()])
 logger = logging.getLogger(__name__)
-temp_dir = tempfile.TemporaryDirectory()
+
+
+
+
 
 
 class NavitermApp(App):
@@ -31,7 +35,6 @@ class NavitermApp(App):
         super().__init__()
         self.connection : Optional[AsyncConnection] = None
         self.player : Optional[Player] = None
-        self.temp_dir = temp_dir.name
 
     async def on_mount(self) -> None:
         """Set up the initial screen when the app starts."""

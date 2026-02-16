@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A TUI Music Player for Navidrome and other opensubsonic-api compatible servers."
 readme = "README.md"
 dependencies = [
+    "aiofiles>=25.1.0",
     "just-playback>=0.1.8",
     "platformdirs>=4.5.1",
     "py-opensonic>=8.0.1",
