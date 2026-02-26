@@ -1,7 +1,8 @@
 """Main application class for Naviterm."""
 
+from libopensonic.media.media_types import Child
 from naviterm.screens.NowPlaying import NowPlaying
-from naviterm.player import Player
+from naviterm.player import Player, EventHandler
 from textual.app import App
 from textual.logging import TextualHandler
 
@@ -16,6 +17,8 @@ from platformdirs import user_cache_dir
 
 logging.basicConfig(level=logging.DEBUG, handlers=[TextualHandler()])
 logger = logging.getLogger(__name__)
+cache_dir = Path(user_cache_dir("Naviterm", "Naviterm"))
+music_cache_dir = cache_dir / "music"  
 
 
 
@@ -35,17 +38,20 @@ class NavitermApp(App):
         super().__init__()
         self.connection : Optional[AsyncConnection] = None
         self.player : Optional[Player] = None
-
+        self.event_handler : EventHandler = EventHandler()
+        self.now_playing : Child | None = None
+        
     async def on_mount(self) -> None:
         """Set up the initial screen when the app starts."""
         self.theme = "catppuccin-mocha"
         logger.debug("Starting NavitermApp")
         config = load_config()
+        music_cache_dir.mkdir(parents=True, exist_ok=True)
         if config.get("username") and config.get("password") and config.get("server_url"):
             self.connection = AsyncConnection(base_url=config.get("server_url", ""), username=config.get("username", ""), password=config.get("password", ""), app_name="Naviterm", port=443)
             try:
                 await self.connection.ping()
-                self.player = Player(self.connection)
+                self.player = Player(self.connection, self.event_handler)
                 self.push_screen(Layout())
             except Exception as e:
                 logger.error(f"Error pinging server: {e}")
@@ -68,9 +74,19 @@ class NavitermApp(App):
         assert self.player is not None
         """Clean up on app exit."""
         self.player.save_config()
-        for file in listdir("music"):
-            
-            remove(f"music/{file}")
+        for file in listdir(music_cache_dir):
+            try: 
+                remove(f"{music_cache_dir}/{file}")
+            except Exception as e:
+                logger.error(f"Error removing cached file {file}: {e}")
+                
+    def on_track_changed(self, track: Child) -> None:
+        """Handle track change events."""
+        self.now_playing = track
+                
+    def _register_handlers(self) -> None:
+        """Register event handlers for the player."""
+        self.event_handler.on("track_changed", self.on_track_changed)
                 
     
             

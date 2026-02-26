@@ -65,6 +65,10 @@ class AlbumView(Widget):
     }
     """
     
+    BINDINGS = [
+        ("space", "add_to_queue()", "Add to Queue"),
+    ]
+    
     def __init__(self, album_id: str):
         super().__init__()
         self.album_id = album_id
@@ -151,6 +155,18 @@ class AlbumView(Widget):
                     mime_types.get(track.content_type or "", "unknown"),
                     f"{track.bit_rate} kbps"
                 )
+
+    def action_add_to_queue(self) -> None:
+        table = self.query_one("#album-tracks-table", DataTable)
+        selected_row = table.cursor_row
+        if selected_row is None:
+            return
+        if self.album is None or self.album.song is None or selected_row >= len(self.album.song):
+            logger.error(f"Invalid track selection: {selected_row}")
+            return
+        track = self.album.song[selected_row]
+        print(f"Adding track to queue: {track.title} by {track.artist}")
+        self.app.player.add_to_queue(track) #type: ignore
                 
     async def on_key(self, event: Key) -> None:
         if event.key == "enter":

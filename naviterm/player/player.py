@@ -3,6 +3,7 @@ from asyncio import create_task
 
 from platformdirs import user_cache_dir
 from naviterm.config import load_playback_config
+from naviterm.player import EventHandler
 import random
 from naviterm.config import save_playback_config
 from just_playback import Playback
@@ -32,9 +33,10 @@ class Player():
     """
     
     
-    def __init__(self, connection: AsyncConnection) -> None:
+    def __init__(self, connection: AsyncConnection, event_handler: EventHandler) -> None:
         self.is_playing = False
         self.connection = connection
+        self.event_handler = event_handler
         self.tracks : list[Child] = []
         self.current_index : int = 0 # -1 so no track playing
         self.del_index = -1 # Left ptr to delete tracks that have been played from cache
@@ -43,6 +45,7 @@ class Player():
         self.shuffling : bool = playback_config.get("shuffling", False)
         self.repeating : bool = playback_config.get("repeating", False)
         self.audio_player = Playback()
+        self._register_handlers()
 
         
         
@@ -88,10 +91,9 @@ class Player():
         random.shuffle(t_queue)
         if current_track:
             self.tracks = [current_track] + t_queue
-            self.current_index = 0
         else:
             self.tracks = t_queue
-            self.current_index = -1
+        self.current_index = 0
             
     def clear(self) -> None:
         """Clear the queue.
@@ -107,10 +109,11 @@ class Player():
         """
         if isinstance(tracks, Child):
             self.tracks.append(tracks)
+            print(f"Added track to queue: {tracks.title} by {tracks.artist}")
+            
         else:
             self.tracks.extend(tracks)
         
-    
     
     async def start(self):
         """Start playback of queue"""
@@ -126,30 +129,38 @@ class Player():
         assert cur.content_type is not None, "Track content type is None"
         
         if not await self.file_exists(cur.id, cur.content_type): 
-            await self.cache_track(cur)
+            await self.cache_track()
             self.cache_index += 1
-            create_task(self.play_track(cur.id, cur.content_type))
+            create_task(self.play_track())
         else:
-            create_task(self.play_track(cur.id, cur.content_type))
+            create_task(self.play_track())
             
         while(self.cache_index < len(self.tracks) and self.cache_index <= self.current_index + 3):
-            track = self.tracks[self.cache_index]
-            if track.content_type is not None and not await self.file_exists(track.id, track.content_type):
-                await self.cache_track(track)
+            
+            await self.cache_track()
             self.cache_index += 1
         
     
-    
     async def next(self):
-        pass
+        """
+            Move to the next track in the queue and play it.
+        """
+        if self.current_index + 1 >= len(self.tracks):
+            if self.repeating:
+                self.current_index = 0
+            else:
+                self.is_playing = False
+                
+                return
         
+        self.del_index = self.current_index - 1
         
-        
+        await self.start()
 
     
     
-    async def cache_track(self, track: Child) -> None:
-        
+    async def cache_track(self) -> None:
+        track = self.tracks[self.cache_index]
         data = await self.connection.stream(track.id)
         async with aio_open(f"{music_cache_dir}/{track.id}.{mime_types[data.content_type]}", "wb") as f:
             await f.write(await data.read())
@@ -166,20 +177,24 @@ class Player():
                 
         self.del_index += 1
 
-    async def play_track(self, track_id: str, content_type: str) -> None:
-        """Play a track."""
+    async def play_track(self) -> None:
+        """Plays the currently pointed to track in the queue."""
         current_track = self.get_current_track()
         if not current_track:
             return
         
-        self.audio_player.load_file(f"{music_cache_dir}/{track_id}.{mime_types[content_type]}")
+        self.audio_player.load_file(f"{music_cache_dir}/{current_track.id}.{mime_types[current_track.content_type if current_track.content_type else 'audio/mpeg']}")
         self.is_playing = True
         self.audio_player.play()
-        logger.info(f"Streaming track: {track_id if track_id else 'Unknown'}")
+        logger.info(f"Streaming track: {current_track.id if current_track.id else 'Unknown'}")
         
     async def file_exists(self, track_id: str, content_type: str) -> bool:
         return Path(f"{music_cache_dir}/{track_id}.{mime_types[content_type]}").exists()
 
     async def wait_for_current_track_end(self, duration: int) -> None:
         pass
+    
+    def _register_handlers(self) -> None:
+        self.event_handler.on("play", self.start)
+        self.event_handler.on("next", self.next)
     
